@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Révision Philo — Terminale</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root {
+  --bg:#0d0d0f; --surface:#141418; --surface2:#1c1c22; --border:#2a2a35;
+  --accent:#c8a96e; --accent2:#7b9ccc; --accent3:#8ecfa0; --accent4:#cc8080;
+  --text:#e8e4dc; --text-muted:#8a8688; --text-dim:#5a5660;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-text-size-adjust:100%}
+::-webkit-scrollbar{width:5px} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* HEADER */
+header{border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;background:rgba(13,13,15,.96);backdrop-filter:blur(12px);z-index:200}
+header h1{font-family:'DM Serif Display',serif;font-size:21px;color:var(--accent)}
+.header-stats{margin-left:auto;display:flex;gap:20px;align-items:center}
+.stat-chip{font-size:12px;color:var(--text-muted);background:var(--surface2);border:1px solid var(--border);padding:4px 12px;border-radius:20px}
+.stat-chip span{color:var(--accent);font-weight:600}
+
+/* LAYOUT */
+.app{display:flex;min-height:calc(100vh - 61px)}
+.sidebar{width:250px;flex-shrink:0;border-right:1px solid var(--border);padding:18px 0;overflow-y:auto;position:sticky;top:61px;height:calc(100vh - 61px);-webkit-overflow-scrolling:touch}
+.sidebar-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);padding:0 18px 6px}
+.sidebar-section{margin-bottom:8px}
+.sidebar-btn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 18px;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:13.5px;font-family:inherit;text-align:left;transition:all .15s;border-left:2px solid transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;min-height:44px}
+.sidebar-btn:hover{background:var(--surface);color:var(--text)}
+.sidebar-btn.active{background:var(--surface2);color:var(--accent);border-left-color:var(--accent)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.content{flex:1;padding:32px;overflow-y:auto;max-width:900px}
+.panel{display:none} .panel.active{display:block}
+
+/* TYPOGRAPHY */
+.section-title{font-family:'DM Serif Display',serif;font-size:27px;color:var(--accent);margin-bottom:6px}
+.section-subtitle{color:var(--text-muted);margin-bottom:26px;font-size:14px;line-height:1.5}
+h4{font-size:14px;margin-bottom:5px}
+
+/* CARDS GRID */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.cards-1{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:24px}
+.cards-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:17px;transition:border-color .2s}
+.card:hover{border-color:rgba(200,169,110,.4)}
+.card-tag{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:7px;font-weight:600}
+.card h3{font-size:15px;margin-bottom:7px;line-height:1.3}
+.card p{font-size:13px;color:var(--text-muted);line-height:1.65}
+.card blockquote{border-left:2px solid var(--accent);padding-left:10px;margin-top:8px;font-style:italic;font-size:12.5px;color:var(--accent);line-height:1.5}
+
+/* SUBSECTION */
+.subsection{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+.subsection h3{font-size:16px;margin-bottom:12px;color:var(--accent2)}
+.subsection p{font-size:14px;color:var(--text-muted);line-height:1.7;margin-bottom:7px}
+.subsection strong{color:var(--text)}
+hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+/* TABLE */
+.philo-table{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.philo-header{display:grid;background:var(--surface2);border-bottom:1px solid var(--border)}
+.philo-header-cell{padding:9px 13px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);border-right:1px solid var(--border);font-weight:600}
+.philo-header-cell:last-child{border-right:none}
+.philo-row{display:grid;border-bottom:1px solid var(--border)}
+.philo-row:last-child{border-bottom:none}
+.philo-cell{padding:11px 13px;font-size:13px;border-right:1px solid var(--border);line-height:1.55;color:var(--text-muted)}
+.philo-cell:last-child{border-right:none}
+.philo-name{font-weight:600;color:var(--accent);font-size:13px}
+.cols-3 .philo-header,.cols-3 .philo-row{grid-template-columns:110px 1fr 1fr}
+.cols-2 .philo-header,.cols-2 .philo-row{grid-template-columns:130px 1fr}
+.cols-4 .philo-header,.cols-4 .philo-row{grid-template-columns:110px 1fr 1fr 1fr}
+
+/* METHODS */
+.method-step{display:flex;gap:14px;margin-bottom:14px}
+.method-num{width:30px;height:30px;background:var(--accent);color:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0}
+.method-body p{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+/* NOTION DETAIL (clickable) */
+.notion-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.notion-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .2s}
+.notion-card:hover{border-color:var(--accent);transform:translateY(-2px);background:var(--surface2)}
+.notion-card-tag{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:6px;font-weight:600}
+.notion-card h3{font-size:14px;margin-bottom:5px}
+.notion-card p{font-size:12px;color:var(--text-muted);line-height:1.5}
+.notion-card .arrow{font-size:11px;color:var(--text-dim);margin-top:8px}
+
+/* NOTION DETAIL PAGE */
+.notion-detail{display:none}
+.notion-detail.active{display:block}
+.back-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:8px 16px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:13px;margin-bottom:22px;transition:all .15s}
+.back-btn:hover{color:var(--accent);border-color:var(--accent)}
+.def-box{background:rgba(200,169,110,.07);border:1px solid rgba(200,169,110,.25);border-radius:10px;padding:16px 18px;margin-bottom:20px}
+.def-box p{font-size:14px;line-height:1.7;color:var(--text)}
+.def-etym{font-size:12px;color:var(--text-muted);margin-top:6px;font-style:italic}
+.philo-fiche{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:17px;margin-bottom:12px}
+.philo-fiche-header{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.philo-fiche-name{font-weight:700;font-size:15px;color:var(--accent)}
+.philo-fiche-period{font-size:11px;color:var(--text-dim)}
+.philo-fiche-work{font-size:11px;color:var(--accent2);font-style:italic}
+.philo-fiche p{font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:7px}
+.philo-fiche .citation{border-left:2px solid var(--accent);padding-left:11px;font-style:italic;font-size:13px;color:var(--accent);margin:10px 0;line-height:1.5}
+.philo-fiche .exemple{background:rgba(123,156,204,.07);border:1px solid rgba(123,156,204,.2);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.6}
+.philo-fiche .exemple strong{color:var(--accent2)}
+.notion-section-title{font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);font-weight:600;margin:20px 0 10px}
+.retenir-box{background:rgba(142,207,160,.07);border:1px solid rgba(142,207,160,.25);border-radius:8px;padding:13px 16px;margin-top:16px}
+.retenir-box strong{color:var(--accent3);display:block;margin-bottom:5px;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.retenir-box p{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+/* QUIZ */
+.quiz-question{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:14px}
+.quiz-q-text{font-size:15px;margin-bottom:14px;line-height:1.5}
+.quiz-options{display:flex;flex-direction:column;gap:7px}
+.quiz-option{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 14px;cursor:pointer;font-size:13.5px;transition:all .15s;text-align:left;color:var(--text);font-family:inherit}
+.quiz-option:hover:not([disabled]){border-color:var(--accent2);color:var(--accent2)}
+.quiz-option.correct{border-color:var(--accent3);background:rgba(142,207,160,.1);color:var(--accent3)}
+.quiz-option.wrong{border-color:var(--accent4);background:rgba(204,128,128,.1);color:var(--accent4)}
+.quiz-option.revealed-correct{border-color:var(--accent3);background:rgba(142,207,160,.07);color:var(--accent3)}
+.quiz-explanation{margin-top:10px;padding:11px;background:rgba(200,169,110,.07);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-muted);line-height:1.6;display:none}
+.quiz-score{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px}
+.quiz-score-num{font-family:'DM Serif Display',serif;font-size:32px;color:var(--accent)}
+
+/* ==================== FLASHCARDS V2 ==================== */
+.fc-wrap{max-width:700px;margin:0 auto}
+.fc-stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.fc-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}
+.fc-stat-num{font-family:'DM Serif Display',serif;font-size:22px}
+.fc-stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.fc-stat.s1 .fc-stat-num{color:#8ecfa0} /* facile */
+.fc-stat.s2 .fc-stat-num{color:#7b9ccc}
+.fc-stat.s3 .fc-stat-num{color:#c8a96e}
+.fc-stat.s4 .fc-stat-num{color:#cc8080}
+
+.fc-queue-info{font-size:12px;color:var(--text-muted);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.fc-queue-badge{background:var(--surface2);border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-size:11px}
+
+/* Card flip */
+.fc-perspective{perspective:1000px;margin-bottom:20px}
+.fc-card{position:relative;height:260px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:pointer;border-radius:14px}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;border-radius:14px;padding:30px;backface-visibility:hidden;display:flex;flex-direction:column;justify-content:center}
+.fc-front{background:var(--surface);border:1px solid var(--border)}
+.fc-back{background:var(--surface2);border:1px solid rgba(200,169,110,.35);transform:rotateY(180deg)}
+.fc-tag-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.fc-tag{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-dim);background:var(--surface2);padding:3px 9px;border-radius:20px;border:1px solid var(--border)}
+.fc-difficulty{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid}
+.fc-d1{color:#8ecfa0;border-color:rgba(142,207,160,.3);background:rgba(142,207,160,.1)}
+.fc-d2{color:#7b9ccc;border-color:rgba(123,156,204,.3);background:rgba(123,156,204,.1)}
+.fc-d3{color:#c8a96e;border-color:rgba(200,169,110,.3);background:rgba(200,169,110,.1)}
+.fc-d4{color:#cc8080;border-color:rgba(204,128,128,.3);background:rgba(204,128,128,.1)}
+.fc-question{font-family:'DM Serif Display',serif;font-size:21px;line-height:1.3;color:var(--text)}
+.fc-answer{font-size:13.5px;line-height:1.75;color:var(--text-muted);flex:1}
+.fc-author{margin-top:10px;font-size:11.5px;color:var(--accent);font-style:italic}
+.fc-click-hint{position:absolute;bottom:14px;right:16px;font-size:11px;color:var(--text-dim)}
+.fc-review-shown{font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:12px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+
+/* Rating buttons */
+.fc-rating{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.fc-rating-btn{padding:12px 8px;border-radius:9px;border:1px solid;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:all .15s;text-align:center;background:transparent}
+.fc-rating-btn:hover{transform:translateY(-2px)}
+.fc-rb-1{color:#8ecfa0;border-color:rgba(142,207,160,.35)} .fc-rb-1:hover{background:rgba(142,207,160,.12)}
+.fc-rb-2{color:#7b9ccc;border-color:rgba(123,156,204,.35)} .fc-rb-2:hover{background:rgba(123,156,204,.12)}
+.fc-rb-3{color:#c8a96e;border-color:rgba(200,169,110,.35)} .fc-rb-3:hover{background:rgba(200,169,110,.12)}
+.fc-rb-4{color:#cc8080;border-color:rgba(204,128,128,.35)} .fc-rb-4:hover{background:rgba(204,128,128,.12)}
+.fc-rating-label{font-size:11px;opacity:.75;margin-top:3px}
+.fc-rating-sublabel{font-size:10px;opacity:.55}
+
+.fc-nav-row{display:flex;gap:10px;align-items:center}
+.fc-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:7px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .15s;touch-action:manipulation;min-height:44px}
+.fc-btn:hover{border-color:var(--accent);color:var(--accent)}
+.fc-counter{margin-left:auto;font-size:13px;color:var(--text-muted)}
+.fc-empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.fc-empty .big{font-size:48px;margin-bottom:12px}
+.fc-empty h3{font-size:18px;color:var(--text);margin-bottom:8px}
+
+/* PROGRESS BAR */
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:4px}
+.progress-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s}
+
+/* TAG PILLS */
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;margin:2px}
+.tag-blue{background:rgba(123,156,204,.12);color:var(--accent2);border:1px solid rgba(123,156,204,.25)}
+.tag-gold{background:rgba(200,169,110,.12);color:var(--accent);border:1px solid rgba(200,169,110,.25)}
+.tag-green{background:rgba(142,207,160,.12);color:var(--accent3);border:1px solid rgba(142,207,160,.25)}
+.tag-red{background:rgba(204,128,128,.12);color:var(--accent4);border:1px solid rgba(204,128,128,.25)}
+</style>
+</head>
+<body>
+<header>
+  <h1>📚 Philo Terminale</h1>
+  <div class="header-stats">
+    <div class="stat-chip">Flashcards vues aujourd'hui : <span id="hdr-seen">0</span></div>
+    <div class="stat-chip">À réviser : <span id="hdr-due">0</span></div>
+  </div>
+</header>
+
+<div class="app">
+<nav class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Cours</div>
+    <button class="sidebar-btn active" data-panel="seq1"><span class="dot" style="background:#c8a96e"></span>Seq 1 — Existence & Culture</button>
+    <button class="sidebar-btn" data-panel="seq2"><span class="dot" style="background:#7b9ccc"></span>Seq 2 — Morale & Politique</button>
+    <button class="sidebar-btn" data-panel="seq3"><span class="dot" style="background:#8ecfa0"></span>Seq 3 — La Connaissance</button>
+    <button class="sidebar-btn" data-panel="seq4"><span class="dot" style="background:#cc8080"></span>Seq 4 — Le Bonheur</button>
+    <button class="sidebar-btn" data-panel="religion"><span class="dot" style="background:#a07cc0"></span>La Religion</button>
+    <button class="sidebar-btn" data-panel="eichmann"><span class="dot" style="background:#c08070"></span>Eichmann & Arendt</button>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Révision</div>
+    <button class="sidebar-btn" data-panel="flashcards"><span class="dot" style="background:#7b9ccc"></span>Flashcards ✦ Répétition espacée</button>
+    <button class="sidebar-btn" data-panel="quiz"><span class="dot" style="background:#8ecfa0"></span>Quiz Bac (20 questions)</button>
+    <button class="sidebar-btn" data-panel="notions"><span class="dot" style="background:#c8a96e"></span>Toutes les notions</button>
+    <button class="sidebar-btn" data-panel="methode"><span class="dot" style="background:#cc8080"></span>Méthode Dissertation</button>
+  </div>
+</nav>
+
+<main class="content">
+
+<!-- ============ SEQ 1 ============ -->
+<div class="panel active" id="panel-seq1">
+  <div class="section-title">Séquence 1 — L'existence humaine et la culture</div>
+  <div class="section-subtitle">L'homme est-il par nature un être de culture ? · 3 chapitres</div>
+
+  <div class="subsection">
+    <h3>Chapitre 1 — L'Homme : Homo Sapiens, Homo Faber, Homo Laborans</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Conscience</div><h3>Le «Je pense donc je suis»</h3><p>Descartes : le seul fait de douter prouve qu'on existe, car douter c'est penser. La pensée est donc la seule certitude indubitable. Ce qui me définit, c'est la pensée.</p><blockquote>«Je pense donc je suis» — Descartes, Méditations Métaphysiques</blockquote></div>
+      <div class="card"><div class="card-tag">Raison</div><h3>La Raison humaine</h3><p>Faculté de distinguer le vrai du faux, le bien du mal. Descartes : «le bon sens est la chose du monde la mieux partagée» — mais avoir la raison ne signifie pas bien s'en servir. Aristote : l'homme est un animal raisonnable.</p></div>
+      <div class="card"><div class="card-tag">Langage</div><h3>Logos vs communication animale</h3><p>L'animal communique par signes instinctifs (émotions, besoins). L'homme possède le <em>logos</em> (Aristote) : discours rationnel normatif. Seul l'homme peut distinguer le juste de l'injuste et voter des lois.</p><blockquote>Descartes : l'animal est une machine, dépourvu de pensée</blockquote></div>
+      <div class="card"><div class="card-tag">Technique</div><h3>La Technique selon Aristote & Heidegger</h3><p>Aristote : l'outil = prolongement du corps, indissociable de la pensée. Descartes : technique → maîtriser la nature. Heidegger : alerte contre le caractère «impérieux et conquérant» de la technique moderne.</p></div>
+      <div class="card"><div class="card-tag">Travail — Marx</div><h3>Travail humain vs travail animal</h3><p>L'architecte se représente son œuvre <em>avant</em> de la construire (médiation par la conscience). L'abeille, non : instinct. Le travail humain est conscient, réfléchi, libre. En travaillant, l'homme <strong>s'humanise</strong>.</p></div>
+      <div class="card"><div class="card-tag">Aliénation</div><h3>Quand le travail déshumanise</h3><p>Marx : le travail à la chaîne est aliénant — l'homme ne se reconnaît plus dans ce qu'il produit. Arendt : distingue travail (vital, cyclique), œuvre (durable, immortaliser) et action (politique, singularisation).</p></div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3>Chapitre 2 — La culture menace-t-elle l'existence humaine ?</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Descartes</div><h3>«Maître et possesseur de la nature»</h3><p>Objectif hygiéniste : comprendre la nature pour réduire les souffrances humaines. Le «comme» est important : agir <em>comme si</em> on était maître, pas devenir Dieu. Ce n'est pas une invitation à l'exploitation.</p></div>
+      <div class="card"><div class="card-tag">Arendt</div><h3>Crise de la culture contemporaine</h3><p>La modernité a glorifié le travail : tout est devenu consommable, même la culture. Nous avons renié le passé. La science est devenue la nouvelle religion. Solution : replacer l'art dans le domaine public.</p><blockquote>«L'art rend le monde durable»</blockquote></div>
+      <div class="card"><div class="card-tag">Baudrillard</div><h3>La société de consommation</h3><p>On achète pour son statut social. Confusion besoin/désir. Les objets nous possèdent. La pub formate nos désirs. Joie éphémère, pas de satisfaction durable. <em>«Nous consommons des signes comme jadis on priait des idoles.»</em></p></div>
+      <div class="card"><div class="card-tag">Rousseau vs Voltaire</div><h3>Lisbonne 1755 — Responsabilité humaine</h3><p>Voltaire : fatalité divine. Rousseau : les catastrophes révèlent notre responsabilité (choix d'habiter des zones dangereuses). La souffrance n'est pas divine mais humaine → naissance de la responsabilité sociale et politique.</p></div>
+    </div>
+  </div>
+
+  <div class="subsection">
+    <h3>Chapitre 3 — L'art, le temps, la liberté, le devoir</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Les 7 philosophes sur l'art :</p>
+    <div class="philo-table cols-3">
+      <div class="philo-header"><div class="philo-header-cell">Philosophe</div><div class="philo-header-cell">Thèse sur l'art</div><div class="philo-header-cell">Citation clé</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Platon</div><div class="philo-cell">Art = imitation trompeuse (copie de copie des Idées). Flatte les émotions, éloigne de la vérité. Dangereux pour la cité.</div><div class="philo-cell"><em>«Le peintre n'imite que l'apparence.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Aristote</div><div class="philo-cell">Art = mimèsis créatrice + instructive. Catharsis : purification des émotions (peur + pitié). Révèle des vérités universelles.</div><div class="philo-cell"><em>«La poésie est plus philosophique que l'histoire.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Kant</div><div class="philo-cell">Le beau plaît de manière désintéressée, sans utilité ni concept. Subjectif mais prétend à l'universalité.</div><div class="philo-cell"><em>«Est beau ce qui plaît universellement sans concept.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Hegel</div><div class="philo-cell">L'art exprime l'Esprit humain dans une forme sensible. Chaque époque crée des œuvres reflétant son niveau de conscience.</div><div class="philo-cell"><em>«L'art renseigne l'homme sur l'humain.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Heidegger</div><div class="philo-cell">L'art dévoile la vérité : confrontation entre le monde (vie humaine) et la terre (matière brute). Les Souliers de Van Gogh.</div><div class="philo-cell"><em>«L'œuvre est le lieu où le monde et la terre se confrontent.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Merleau-Ponty</div><div class="philo-cell">L'artiste révèle le monde par son regard incarné (corps + esprit). L'art ne copie pas : il rend visible.</div><div class="philo-cell"><em>«L'art ne reproduit pas le visible, il rend visible.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Arendt</div><div class="philo-cell">L'art appartient à l'œuvre (durable) ≠ travail (cyclique) ≠ technique (efficacité). Il rend le monde habitable.</div><div class="philo-cell"><em>«L'art révèle la pluralité et la signification du monde.»</em></div></div>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Le temps selon 6 philosophes :</p>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Héraclite</div><h3>Le temps comme devenir</h3><p><em>«On ne se baigne jamais deux fois dans le même fleuve.»</em> Tout change, tout est mouvement. Le temps est la loi du réel (Logos). Les opposés se succèdent dans une unité vivante.</p></div>
+      <div class="card"><div class="card-tag">Saint Augustin</div><h3>3 présents dans la conscience</h3><p>Présent du passé (mémoire) / présent du futur (attente) / présent du présent (attention). Le temps n'est pas dans les choses mais dans la conscience. <em>«Si personne ne me le demande, je sais ; si on me le demande, je ne sais plus.»</em></p></div>
+      <div class="card"><div class="card-tag">Pascal</div><h3>Fuite du présent & divertissement</h3><p>L'homme fuit le présent dans le passé (regrets) ou l'avenir (espoirs). Le divertissement = fuite pour ne pas penser à sa finitude. <em>«Nous ne vivons jamais, mais nous espérons de vivre.»</em></p></div>
+      <div class="card"><div class="card-tag">Bergson</div><h3>La durée vécue</h3><p>Temps scientifique (horloge, mesurable) ≠ durée (temps vécu, continu, qualitatif). La durée est personnelle et subjective. <em>«La durée est la vie même, indivisible et créatrice.»</em></p></div>
+      <div class="card"><div class="card-tag">Heidegger</div><h3>Temps et existence</h3><p>L'homme est «jeté dans le monde et projeté vers l'avenir». Passé, présent, futur sont indissociables. Le temps n'est pas extérieur : c'est la structure même de l'existence humaine.</p></div>
+      <div class="card"><div class="card-tag">Ricœur</div><h3>Le temps narratif</h3><p>Le temps prend sens dans le récit. Raconter = organiser passé/présent/futur, donner une cohérence à la vie. <em>«Le récit fait du temps vécu une histoire.»</em></p></div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Liberté</div><h3>Libre arbitre vs Déterminismes</h3><p>Spinoza : libre arbitre = illusion (on ignore nos causes). Freud : déterminisme inconscient. Bourdieu : déterminisme social. Sartre : l'homme est «condamné à être libre» (sans Dieu, il crée ses valeurs). La prise de conscience peut permettre l'émancipation.</p></div>
+      <div class="card"><div class="card-tag">Kant — Devoir</div><h3>Impératif catégorique vs hypothétique</h3><p><strong>Catégorique</strong> : par devoir, désintéressé, universalisable (moral). <strong>Hypothétique</strong> : pour un résultat, conditionnel (non moral). Morale déontologique (Kant) vs utilitariste (Mill : maximiser le bonheur du plus grand nombre).</p><blockquote>«Agis comme si ta maxime devait devenir une loi universelle.»</blockquote></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEQ 2 ============ -->
+<div class="panel" id="panel-seq2">
+  <div class="section-title">Séquence 2 — La Morale et la Politique</div>
+  <div class="section-subtitle">Justice, État, contrat social : comment vivre ensemble ?</div>
+  <div class="subsection">
+    <h3>Aristote — L'homme est un animal politique</h3>
+    <p>L'homme est <em>par nature</em> voué à vivre en société. «La nature ne fait rien en vain» : le langage (logos) nous a été donné pour exprimer le juste/injuste et former une communauté. L'animal n'exprime que douleur/plaisir. La communauté politique libère du temps (division du travail) pour se cultiver.</p>
+  </div>
+  <div class="subsection">
+    <h3>Le Contrat Social — Hobbes vs Rousseau</h3>
+    <div class="philo-table cols-3">
+      <div class="philo-header"><div class="philo-header-cell">Point</div><div class="philo-header-cell">🔴 Hobbes</div><div class="philo-header-cell">🟢 Rousseau</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">État de nature</div><div class="philo-cell">Guerre de tous contre tous. Vie brève et violente. Rien n'est juste/injuste. Tendance à dominer.</div><div class="philo-cell">Idyllique et harmonieux. L'homme est solitaire, bon, sans vice. Amour de soi + pitié naturelle.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Nature humaine</div><div class="philo-cell">«L'homme est un loup pour l'homme.» Naturellement égoïste.</div><div class="philo-cell">Bon par nature. C'est la société qui le corrompt.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Contrat</div><div class="philo-cell">On cède tout à un souverain absolu (Léviathan) pour la sécurité. Absolutisme justifié.</div><div class="philo-cell">Contrat entre citoyens égaux → volonté générale. Le souverain = le peuple.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Liberté</div><div class="philo-cell">La liberté absolue crée le chaos → on y renonce pour la paix.</div><div class="philo-cell"><em>«Obéissance à la loi qu'on s'est prescrite.»</em> La vraie liberté = autonomie.</div></div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>La Justice et l'État</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Aristote</div><h3>Égalité + Équité</h3><p>Égalité : la loi est la même pour tous. Équité : on donne à chacun ce qui lui est dû (selon le mérite). Justice distributive / commutative / corrective.</p></div>
+      <div class="card"><div class="card-tag">Mythe des Atrides</div><h3>Vengeance → Justice</h3><p>Vengeance = cercle infini de violence (vendetta). La justice institutionnelle commence quand un arbitre intervient. Antigone : justice divine > loi humaine (Créon).</p></div>
+      <div class="card"><div class="card-tag">Weber — État</div><h3>Monopole de la violence légitime</h3><p>L'État est le seul détenteur du droit d'exercer la violence. Sans État = tyrannie, dictature. Mais Arendt : l'État peut aussi produire le mal légal (totalitarisme).</p></div>
+      <div class="card"><div class="card-tag">Kant</div><h3>Morale ≠ Loi</h3><p>La morale vient de l'autonomie de l'individu (impératif catégorique), pas de l'État. Kant : dépasser son «état de minorité» pour devenir autonome. L'État n'est pas le garant de la morale.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEQ 3 ============ -->
+<div class="panel" id="panel-seq3">
+  <div class="section-title">Séquence 3 — La Connaissance</div>
+  <div class="section-subtitle">Vérité, science, inconscient, connaissance de soi</div>
+  <div class="subsection">
+    <h3>La Vérité — plusieurs approches</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Alain</div><h3>L'erreur, étape vers la vérité</h3><p><em>«Quiconque pense commence toujours par se tromper.»</em> L'erreur témoigne d'un effort de pensée. La bêtise : ne pas reconnaître ses erreurs. «Toutes nos vérités sont des erreurs redressées.»</p></div>
+      <div class="card"><div class="card-tag">Nietzsche</div><h3>La vérité est une invention humaine</h3><p><em>«Les vérités sont des illusions dont on a oublié qu'elles le sont.»</em> Pas de vérité pure, absolue. Toute vérité naît de désirs humains. La vérité est une valeur, une croyance divinisée.</p></div>
+      <div class="card"><div class="card-tag">Pascal</div><h3>3 ordres d'accès à la vérité</h3><p>Ordre de la chair (sens) / de l'esprit (raison) / du cœur (intuition, foi). <em>«Le cœur a ses raisons que la raison ne connaît point.»</em> La foi ne se démontre pas comme le théorème de Pythagore.</p></div>
+      <div class="card"><div class="card-tag">Bergson</div><h3>L'art dépasse le langage</h3><p>Le langage trahit la réalité : les mots figent ce qui est vivant et mouvant. L'art accède à la vérité subjective et intérieure que les mots ne peuvent saisir.</p></div>
+      <div class="card"><div class="card-tag">Socrate</div><h3>Connais-toi toi-même</h3><p><em>«Je sais que je ne sais rien.»</em> La conscience de son ignorance = début du savoir. Examiner ses croyances en permanence. Pascal : l'homme est un «roseau pensant», fragile mais capable de pensée.</p></div>
+      <div class="card"><div class="card-tag">Cournot</div><h3>Science exacte vs Sciences humaines</h3><p>La science exige : exactitude, régularité, objectivité. La psychologie ne remplit pas ces critères (états non reproductibles, subjectifs). Elle n'est pas une science exacte.</p></div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>Freud — L'inconscient et la psychanalyse</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">2e topique</div><h3>Ça / Moi / Surmoi</h3><p><strong>Ça</strong> : pulsions et désirs immédiats (inconscient). <strong>Surmoi</strong> : normes sociales, interdits (semi-conscient). <strong>Moi</strong> : la raison qui arbitre entre les deux. Personnalité saine = bon équilibre.</p></div>
+      <div class="card"><div class="card-tag">Mécanismes de défense</div><h3>6 mécanismes inconscients</h3><p>Déni / Déplacement / Rationalisation / Régression / Répression / <strong>Sublimation</strong> (désir inacceptable → activité socialement acceptable). Ils se révèlent dans les rêves et actes manqués.</p></div>
+      <div class="card"><div class="card-tag">3 humiliations</div><h3>Copernic → Darwin → Freud</h3><p>1) Copernic : la Terre n'est plus au centre. 2) Darwin : l'homme descend de l'animal. 3) Freud : l'homme n'est pas maître de lui-même (pulsions inconscientes). Chaque fois : destitution de l'homme du centre.</p></div>
+      <div class="card"><div class="card-tag">Malaise — Freud</div><h3>La civilisation réprime nos pulsions</h3><p>La civilisation refoule Thanatos (pulsion de mort). Ce refoulement crée la culpabilité. On ne peut être pleinement heureux en société car elle inhibe nos désirs. Mais on ne peut s'en passer non plus.</p></div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>Kant — Les 3 inconnaissables de la raison pure</h3>
+    <div class="cards-3">
+      <div class="card"><div class="card-tag">1</div><h3>Dieu existe-t-il ?</h3><p>Non objet de connaissance mais de croyance. Postulat pratique : croire en Dieu garantit la moralité et l'espoir du bonheur futur.</p></div>
+      <div class="card"><div class="card-tag">2</div><h3>L'âme est-elle immortelle ?</h3><p>Croire en l'immortalité de l'âme donne la motivation d'agir moralement même sans récompense immédiate.</p></div>
+      <div class="card"><div class="card-tag">3</div><h3>Suis-je libre ?</h3><p>La liberté est la condition de la moralité : sans liberté, pas de responsabilité. C'est un postulat nécessaire à la vie morale.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEQ 4 ============ -->
+<div class="panel" id="panel-seq4">
+  <div class="section-title">Séquence 4 — Le Bonheur</div>
+  <div class="section-subtitle">Peut-on être heureux ? Les grandes théories du bonheur</div>
+  <div class="subsection">
+    <h3>Définition générale</h3>
+    <p>Le bonheur = <strong>état de satisfaction intense, durable et stable</strong> ≠ du plaisir (bref, discontinu). Kant : «La variété de nos penchants, aussi bien extensive qu'intensive, quant au degré et à la durée.»</p>
+  </div>
+  <div class="subsection">
+    <h3>Tableau comparatif des théories</h3>
+    <div class="philo-table cols-3">
+      <div class="philo-header"><div class="philo-header-cell">Philosophe</div><div class="philo-header-cell">Comment atteindre le bonheur ?</div><div class="philo-header-cell">Mot clé</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Épicure</div><div class="philo-cell">Ataraxie (absence de trouble) + aponie. 4 remèdes : ne pas craindre dieux/mort, bonheur accessible, douleur surmontable. Classer ses désirs.</div><div class="philo-cell"><span class="tag tag-green">Ataraxie</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Sénèque</div><div class="philo-cell">Vie vertueuse, délivrée du besoin et des désirs. «La vertu est noble ; le plaisir, bas et servile.»</div><div class="philo-cell"><span class="tag tag-gold">Vertu</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Saint Augustin</div><div class="philo-cell">Béatitude = connaissance de Dieu. Le monde sensible trompe. Seul le monde intelligible mène au bonheur suprême.</div><div class="philo-cell"><span class="tag tag-blue">Béatitude</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Descartes</div><div class="philo-cell">Changer ses désirs plutôt que transformer le monde. Maîtriser ses passions par la raison.</div><div class="philo-cell"><span class="tag tag-gold">Maîtrise</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Rousseau</div><div class="philo-cell">C'est le désir lui-même (non sa satisfaction) qui rend heureux. «Malheur à qui n'a plus rien à désirer !»</div><div class="philo-cell"><span class="tag tag-green">Désir</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Kant</div><div class="philo-cell">Le bonheur est un idéal de l'imagination, pas de la raison. Agir moralement = être digne du bonheur, pas nécessairement heureux.</div><div class="philo-cell"><span class="tag tag-blue">Dignité</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Mill</div><div class="philo-cell">Utilitarisme : maximiser le bonheur du plus grand nombre. Les plaisirs intellectuels > corporels.</div><div class="philo-cell"><span class="tag tag-green">Utilité</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Nietzsche</div><div class="philo-cell">Rejet du bonheur comme but. Vouloir la puissance créatrice, dépasser sa condition (surhomme). Le bonheur des faibles = ressentiment.</div><div class="philo-cell"><span class="tag tag-red">Puissance</span></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Schopenhauer</div><div class="philo-cell">La vie oscille entre souffrance (désir insatisfait) et ennui (désir assouvi). Le bonheur est une illusion. Seul l'art ou l'ascèse peuvent y échapper.</div><div class="philo-cell"><span class="tag tag-red">Pessimisme</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RELIGION ============ -->
+<div class="panel" id="panel-religion">
+  <div class="section-title">La Religion</div>
+  <div class="section-subtitle">Foi et raison, critiques philosophiques, fonctions sociales</div>
+  <div class="subsection">
+    <h3>Définition</h3>
+    <p>Du latin <em>religare</em> = lier. La religion : ensemble de croyances et pratiques qui <strong>relie des hommes entre eux et avec une instance non sensible</strong>, et donne sens à l'existence. Pas une religion, mais des phénomènes religieux (Mauss) — chacun s'inscrit dans un contexte culturel.</p>
+  </div>
+  <div class="subsection">
+    <h3>Les grands philosophes et la religion</h3>
+    <div class="philo-table cols-3">
+      <div class="philo-header"><div class="philo-header-cell">Philosophe</div><div class="philo-header-cell">Thèse</div><div class="philo-header-cell">Citation</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Bergson</div><div class="philo-cell">Universelle : toute société a une religion. Répond à un besoin vital de sens et sécurité. Religion statique (tradition) vs dynamique (mystique créatrice).</div><div class="philo-cell"><em>«Il n'y a jamais eu de société sans religion.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Freud</div><div class="philo-cell">Illusion psychologique née de la détresse. L'homme projette son besoin de protection paternelle sur des dieux. Prolonge la dépendance infantile.</div><div class="philo-cell"><em>«L'homme se crée des dieux dont il a peur.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Marx</div><div class="philo-cell">Produite par l'oppression sociale. Console sans supprimer la cause. Endort les consciences et fait accepter l'injustice.</div><div class="philo-cell"><em>«La religion est l'opium du peuple.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Nietzsche</div><div class="philo-cell">Dieu est mort : effondrement des valeurs chrétiennes. Risque de nihilisme mais aussi libération : l'homme crée ses valeurs. Morale de faiblesse.</div><div class="philo-cell"><em>«Dieu est mort : à nous d'inventer de nouvelles valeurs.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Girard</div><div class="philo-cell">Désir mimétique → violence → victime émissaire → paix. La religion naît du mécanisme sacrificiel pour canaliser la violence sociale.</div><div class="philo-cell"><em>«Le religieux travaille à décourager la violence.»</em></div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Durkheim</div><div class="philo-cell">Fait social avant tout : la religion crée la cohésion du groupe autour du sacré. Le sacré = ce qui rassemble la communauté.</div><div class="philo-cell">Approche sociologique</div></div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>Foi et raison</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Pascal</div><h3>Le Pari de Pascal</h3><p>On ne peut prouver l'existence de Dieu. Parier sur son existence = si Dieu existe, on gagne tout ; s'il n'existe pas, on n'a rien perdu. Stratégie rationnelle face à l'incertitude absolue.</p></div>
+      <div class="card"><div class="card-tag">Kant</div><h3>Dieu comme postulat moral</h3><p>L'existence de Dieu ne peut être prouvée, mais doit être crue comme postulat pratique : elle rend possible la moralité et l'espoir d'une récompense future (bonheur dans l'au-delà).</p></div>
+      <div class="card"><div class="card-tag">Spinoza</div><h3>Foi ≠ Vérité</h3><p>La foi exige obéissance et piété, non vérité. La théologie et la philosophie ont des objets distincts. Ne jamais confondre <em>croire</em> et <em>savoir</em>.</p></div>
+      <div class="card"><div class="card-tag">Nouvelles religions</div><h3>Sécularisation et substituts</h3><p>La science, la consommation, l'argent, le sport peuvent devenir de nouvelles «religions». Simmel : le culte de l'argent se substitue aux valeurs particulières. Baudrillard : on consomme des signes comme jadis on priait des idoles.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EICHMANN ============ -->
+<div class="panel" id="panel-eichmann">
+  <div class="section-title">Eichmann à Jérusalem — Hannah Arendt</div>
+  <div class="section-subtitle">La banalité du mal · Comment un individu ordinaire peut-il commettre le mal ?</div>
+  <div class="subsection">
+    <h3>Thèse centrale d'Arendt</h3>
+    <p>Adolf Eichmann, organisateur de la déportation des Juifs, n'était pas un monstre mais un homme <strong>ordinaire</strong>. Le mal ne vient pas d'une intention malveillante mais de l'<strong>absence de pensée</strong> : incapacité à se dédoubler, à prendre distance critique, à mettre en relation expérience et jugement.</p>
+    <p style="margin-top:9px">La <strong>banalité du mal</strong> = le mal surgit de la pensée absente, de l'obéissance mécanique sans réflexion morale.</p>
+  </div>
+  <div class="subsection">
+    <h3>Concepts clés du tableau vocabulaire Arendt</h3>
+    <div class="philo-table cols-3">
+      <div class="philo-header"><div class="philo-header-cell">Concept</div><div class="philo-header-cell">Définition</div><div class="philo-header-cell">Enjeu</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Pensée</div><div class="philo-cell">Dialogue silencieux avec soi-même. Invisible, libre, interrompt l'action. «Habitude d'examiner ce qui se produit et de s'interroger sur sa signification» (Arendt).</div><div class="philo-cell">Eichmann n'a pas pensé : il exécutait sans questionner.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Jugement</div><div class="philo-cell">Sous-produit libérateur de la pensée. Conditionné par la réflexion préliminaire. Rend la pensée effective dans le monde.</div><div class="philo-cell">Juger = distinguer bien du mal, beau du laid.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Mentalité élargie</div><div class="philo-cell">Capacité à penser depuis la perspective des autres. «Se mettre à la place de tout autre.» Engage l'imagination.</div><div class="philo-cell">Condition de la moralité politique.</div></div>
+      <div class="philo-row"><div class="philo-cell philo-name">Sens commun</div><div class="philo-cell">Sens interne qui garantit la réalité de ce que je perçois par le fait de le partager avec mes semblables. Sans lui = enfermement dans le subjectif.</div><div class="philo-cell">Le totalitarisme détruit le sens commun.</div></div>
+    </div>
+  </div>
+  <div class="subsection">
+    <h3>Le débat : bourreau ou rouage ?</h3>
+    <div class="cards">
+      <div class="card"><div class="card-tag">Thèse Arendt</div><h3>Obéissance mécanique</h3><p>Eichmann a agi par conformisme bureaucratique, sans haine des Juifs. Il suivait les ordres. Sa faute : avoir anesthésié sa conscience. Problème de «ne pas penser» et non d'être mauvais.</p></div>
+      <div class="card"><div class="card-tag">Critique Cesarani</div><h3>Participant convaincu</h3><p>L'historien David Cesarani : des témoignages montrent qu'Eichmann était antisémite convaincu et faisait preuve d'initiative. La thèse d'Arendt minimiserait sa responsabilité personnelle.</p></div>
+      <div class="card"><div class="card-tag">Milgram 1961</div><h3>Obéissance à l'autorité</h3><p>65% des sujets administrent des chocs mortels sur ordre d'un chercheur. Preuve que l'autorité et le contexte institutionnel peuvent pousser des gens ordinaires à des actes cruels. Confirme partiellement Arendt.</p></div>
+      <div class="card"><div class="card-tag">Père Poulet</div><h3>Réflexion sur le mal</h3><p>Le mal = défaillance. Eichmann a anesthésié sa conscience. Nommer le mal, refuser de le banaliser, entrer en résistance par l'amour. «Une fin bonne ne justifie jamais des moyens mauvais» (Kant).</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FLASHCARDS V2 ============ -->
+<div class="panel" id="panel-flashcards">
+  <div class="section-title">Flashcards — Répétition espacée</div>
+  <div class="section-subtitle">Note ta maîtrise après chaque carte : la fréquence de révision s'adapte automatiquement.</div>
+
+  <div class="fc-wrap">
+    <div class="fc-stats-bar">
+      <div class="fc-stat s1"><div class="fc-stat-num" id="fc-s1">0</div><div class="fc-stat-label">Facile ✓</div></div>
+      <div class="fc-stat s2"><div class="fc-stat-num" id="fc-s2">0</div><div class="fc-stat-label">Moyen</div></div>
+      <div class="fc-stat s3"><div class="fc-stat-num" id="fc-s3">0</div><div class="fc-stat-label">Difficile</div></div>
+      <div class="fc-stat s4"><div class="fc-stat-num" id="fc-s4">0</div><div class="fc-stat-label">À revoir ✗</div></div>
+    </div>
+
+    <div class="fc-queue-info">
+      <span class="fc-queue-badge" id="fc-queue-count">0 cartes à réviser</span>
+      <span id="fc-queue-msg" style="font-size:12px;color:var(--text-muted)"></span>
+    </div>
+
+    <div id="fc-main">
+      <div class="fc-perspective">
+        <div class="fc-card" id="fc-card" onclick="fcFlip()">
+          <div class="fc-front">
+            <div class="fc-tag-row">
+              <span class="fc-tag" id="fc-cat">—</span>
+              <span id="fc-diff-badge" class="fc-difficulty fc-d2"></span>
+            </div>
+            <div class="fc-question" id="fc-q">Chargement…</div>
+            <div class="fc-click-hint">Cliquez pour voir la réponse →</div>
+          </div>
+          <div class="fc-back">
+            <div class="fc-tag-row">
+              <span class="fc-tag" id="fc-cat2">—</span>
+            </div>
+            <div class="fc-answer" id="fc-a">—</div>
+            <div class="fc-author" id="fc-auth">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fc-before-flip" style="">
+        <div class="fc-review-shown">👆 Retournez la carte pour voir la réponse, puis évaluez votre niveau.</div>
+      </div>
+
+      <div id="fc-rating-section" style="display:none">
+        <div class="fc-rating">
+          <button class="fc-rating-btn fc-rb-1" onclick="fcRate(1)">
+            <div>1 — Facile</div>
+            <div class="fc-rating-sublabel">Je savais parfaitement</div>
+          </button>
+          <button class="fc-rating-btn fc-rb-2" onclick="fcRate(2)">
+            <div>2 — Bien</div>
+            <div class="fc-rating-sublabel">Je savais à peu près</div>
+          </button>
+          <button class="fc-rating-btn fc-rb-3" onclick="fcRate(3)">
+            <div>3 — Difficile</div>
+            <div class="fc-rating-sublabel">J'ai hésité</div>
+          </button>
+          <button class="fc-rating-btn fc-rb-4" onclick="fcRate(4)">
+            <div>4 — À revoir</div>
+            <div class="fc-rating-sublabel">Je ne savais pas</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="fc-nav-row">
+        <button class="fc-btn" onclick="fcShuffle()">🔀 Mélanger</button>
+        <button class="fc-btn" onclick="fcReset()">↺ Tout réinitialiser</button>
+        <span class="fc-counter" id="fc-ctr">—</span>
+      </div>
+    </div>
+
+    <div id="fc-done" style="display:none" class="fc-empty">
+      <div class="big">🎉</div>
+      <h3>Session terminée !</h3>
+      <p>Tu as révisé toutes les cartes de la session. Reviens dans quelques heures ou clique sur «Mélanger» pour recommencer.</p>
+      <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+        <button class="fc-btn" onclick="fcRestartAll()">Recommencer toutes les cartes</button>
+        <button class="fc-btn" onclick="fcRestartHard()">Réviser uniquement les difficiles (3-4)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ QUIZ ============ -->
+<div class="panel" id="panel-quiz">
+  <div class="section-title">Quiz Bac — 20 questions</div>
+  <div class="section-subtitle">Cliquez sur une réponse pour voir si c'est juste.</div>
+  <div class="quiz-score">
+    <div class="quiz-score-num" id="qs-num">0</div>
+    <div><div style="font-size:14px">Bonnes réponses</div><div style="font-size:12px;color:var(--text-muted)" id="qs-ans">0 répondues</div></div>
+    <button onclick="resetQuiz()" style="margin-left:auto;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px">Recommencer</button>
+  </div>
+  <div id="quiz-container"></div>
+</div>
+
+<!-- ============ NOTIONS ============ -->
+<div class="panel" id="panel-notions">
+  <div id="notions-list">
+    <div class="section-title">Toutes les notions du programme</div>
+    <div class="section-subtitle">17 notions · Cliquez sur une notion pour accéder au cours détaillé avec tous les philosophes, définitions et exemples.</div>
+    <div class="notion-grid" id="notions-grid"></div>
+  </div>
+  <div id="notion-detail-container"></div>
+</div>
+
+<!-- ============ METHODE ============ -->
+<div class="panel" id="panel-methode">
+  <div class="section-title">Méthode — Dissertation & Explication de texte</div>
+  <div class="section-subtitle">Épreuve de 4h · Coefficient 8 · 2 dissertations + 1 explication de texte au choix</div>
+  <div class="subsection">
+    <h3>Structure de la dissertation</h3>
+    <div class="method-step"><div class="method-num">1</div><div class="method-body"><h4>Introduction</h4><p><strong>Amorce</strong> (exemple, citation, fait) → rappel du sujet → réponse évidente → objection → <strong>problématique</strong> (paradoxe : deux thèses vraies qui se contredisent) → annonce du plan. Ne pas sauter de ligne.</p></div></div>
+    <div class="method-step"><div class="method-num">2</div><div class="method-body"><h4>Développement (3 parties)</h4><p>I. Thèse A (réponse évidente) → II. Thèse B (objection) → III. Synthèse/dépassement (votre solution au paradoxe). Chaque partie = argument + référence philo + exemple concret + transition.</p></div></div>
+    <div class="method-step"><div class="method-num">3</div><div class="method-body"><h4>Conclusion</h4><p>Rappel du problème → bilan du raisonnement → réponse définitive → ouverture vers une nouvelle question.</p></div></div>
+  </div>
+  <div class="subsection">
+    <h3>Construire une problématique</h3>
+    <p>La problématique ≠ reformuler le sujet. C'est un paradoxe : deux thèses valides qui se contredisent.</p>
+    <p style="margin-top:8px"><strong>Exemple :</strong> «Pour être heureux dois-je satisfaire tous mes désirs ?»<br>→ A : Oui, l'insatisfaction cause la souffrance.<br>→ B : Non, multiplier les désirs crée un manque infini (Kant, Schopenhauer).<br>→ Problématique : Comment concilier la nécessité du désir avec la recherche d'un bonheur stable ?</p>
+    <p style="margin-top:8px;color:var(--accent)">⚠️ Évitez le relativisme : «ça dépend des points de vue» n'est pas une réponse philosophique.</p>
+  </div>
+  <div class="subsection">
+    <h3>Explication de texte</h3>
+    <div class="method-step"><div class="method-num">A</div><div class="method-body"><h4>Introduction</h4><p>Auteur / œuvre / date / thème. Problème du texte. Thèse(s). Annonce du plan (étapes du raisonnement + lignes).</p></div></div>
+    <div class="method-step"><div class="method-num">B</div><div class="method-body"><h4>Développement linéaire</h4><p>Partie par partie. Définir les concepts. Reformuler (≠ paraphrase). Montrer le raisonnement. Liens avec d'autres philosophes. Transitions entre chaque partie.</p></div></div>
+    <div class="method-step"><div class="method-num">C</div><div class="method-body"><h4>Conclusion</h4><p>Rappel thème/problème/thèse. Intérêt philosophique du texte et ses limites critiques.</p></div></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// =================== NAVIGATION ===================
+function show(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById('panel-'+id);
+  if(panel) panel.classList.add('active');
+  if(btn) btn.classList.add('active');
+  // Scroll content area back to top on mobile
+  const content = document.querySelector('.content');
+  if(content) content.scrollTop = 0;
+  if(id==='flashcards') fcInit();
+  if(id==='quiz') initQuiz();
+  if(id==='notions') initNotions();
+}
+
+// iOS Safari fix: attach all sidebar navigation via addEventListener
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.sidebar-btn[data-panel]').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      show(btn.getAttribute('data-panel'), btn);
+    });
+    btn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      show(btn.getAttribute('data-panel'), btn);
+    });
+  });
+});
+
+// =================== FLASHCARDS V2 ===================
+const CARDS = [
+  {cat:'Descartes',q:'Que signifie «Je pense donc je suis» ?',a:'Le seul fait de douter prouve qu\'on pense, et donc qu\'on existe. C\'est la seule certitude indubitable : même si tout le reste est illusion, le sujet pensant existe nécessairement.',auth:'Méditations Métaphysiques',d:2},
+  {cat:'Marx — Travail',q:'Qu\'est-ce qui distingue l\'architecte de l\'abeille selon Marx ?',a:'L\'architecte se représente mentalement son œuvre AVANT de la construire (médiation par la conscience et l\'imagination). L\'abeille construit par instinct sans se représenter la ruche. C\'est la conscience qui humanise le travail.',auth:'Le Capital',d:2},
+  {cat:'Kant — Art',q:'Qu\'est-ce que le «plaisir désintéressé» selon Kant ?',a:'Le beau plaît sans qu\'on en tire un avantage personnel. On n\'apprécie pas une œuvre parce qu\'elle est utile ou parce qu\'elle nous appartient, mais pour elle-même. Le jugement esthétique est libre de tout intérêt.',auth:'Critique de la faculté de juger',d:2},
+  {cat:'Hobbes',q:'Pourquoi Hobbes justifie-t-il un État absolument souverain ?',a:'Sans État, c\'est la guerre de tous contre tous (état de nature). La vie y est solitaire, misérable, brutale et brève. Pour la sécurité, les individus cèdent tous leurs droits au Léviathan. L\'absolutisme est préférable à l\'anarchie.',auth:'Le Léviathan',d:2},
+  {cat:'Rousseau',q:'En quoi l\'état de nature de Rousseau s\'oppose-t-il à celui de Hobbes ?',a:'Pour Rousseau, l\'état de nature est idyllique : l\'homme est bon, solitaire, sans vice, avec amour de soi et pitié naturelle. C\'est la société et la propriété qui le corrompent. À l\'inverse de Hobbes où la nature est violente.',auth:'Discours sur l\'inégalité',d:2},
+  {cat:'Freud — Inconscient',q:'Qu\'est-ce que le Ça, le Moi, le Surmoi selon Freud ?',a:'Le Ça = pulsions et désirs immédiats (inconscient total). Le Surmoi = normes sociales et interdits (semi-conscient). Le Moi = la part rationnelle qui arbitre entre les deux. Personnalité saine = équilibre Ça/Surmoi.',auth:'Introduction à la psychanalyse',d:3},
+  {cat:'Arendt — Mal',q:'Qu\'est-ce que la «banalité du mal» ?',a:'Le mal peut surgir non d\'une intention malveillante, mais d\'une absence de pensée. Eichmann n\'était pas un monstre : c\'était un bureaucrate qui obéissait sans jamais réfléchir aux conséquences de ses actes. Le mal ordinaire est plus dangereux que le mal spectaculaire.',auth:'Eichmann à Jérusalem',d:2},
+  {cat:'Nietzsche',q:'Que signifie «Dieu est mort» chez Nietzsche ?',a:'Ce n\'est pas un événement théologique mais culturel : les valeurs chrétiennes ont perdu leur force. Risque de nihilisme (plus rien n\'a de sens) mais aussi libération : l\'homme peut créer ses propres valeurs. C\'est une «nouvelle aurore».',auth:'Le Gai Savoir §343',d:2},
+  {cat:'Bergson — Temps',q:'Quelle est la différence entre le temps «objectif» et la «durée» ?',a:'Le temps objectif = mesurable, horloge, quantitatif. La durée = temps vécu intérieurement, continu, qualitatif, personnel. Quand on s\'ennuie le temps est long ; quand on est absorbé il file. La durée est la vraie vie du temps : indivisible et créatrice.',auth:'Essai sur les données immédiates',d:3},
+  {cat:'Saint Augustin',q:'Quels sont les «trois présents» de Saint Augustin ?',a:'Le présent du passé = la mémoire / Le présent du futur = l\'attente / Le présent du présent = l\'attention. Le temps n\'est pas dans les choses mais dans la conscience. On ne peut saisir le temps que de l\'intérieur.',auth:'Les Confessions, Livre XI',d:3},
+  {cat:'Marx — Religion',q:'Pourquoi la religion est-elle «l\'opium du peuple» selon Marx ?',a:'La religion console les opprimés sans supprimer la cause de leur souffrance. Elle endort les consciences, fait accepter l\'injustice et détourne de la lutte sociale. C\'est une «protestation illusoire» contre la misère réelle.',auth:'Contribution à la critique du droit de Hegel',d:2},
+  {cat:'Platon — Art',q:'Pourquoi Platon rejette-t-il les artistes de la cité idéale ?',a:'L\'art imite le monde sensible, qui lui-même imite les Idées (le vrai). C\'est une copie de copie. L\'artiste flatte les émotions et les passions au lieu d\'éduquer la raison. L\'art peut corrompre l\'âme et fragiliser l\'ordre de la cité.',auth:'La République, Livre X',d:2},
+  {cat:'Pascal — Temps',q:'Qu\'est-ce que le «divertissement» selon Pascal ?',a:'Toutes les activités (jeux, projets, travail) qui nous détournent de nous-mêmes pour éviter de penser à notre finitude et à la mort. On préfère remplir son temps plutôt que de faire face au vide du présent. C\'est une fuite de la condition humaine.',auth:'Pensées',d:2},
+  {cat:'Kant — Moral',q:'Donnez un exemple d\'impératif catégorique vs hypothétique.',a:'Catégorique : «Je dis la vérité» (par devoir, universel, désintéressé). Hypothétique : «Je dis la vérité pour avoir bonne réputation» (conditionnel, intéressé). Seul le catégorique est moral car il vaut sans condition.',auth:'Fondements de la métaphysique des mœurs',d:2},
+  {cat:'Aristote — Justice',q:'Quelle est la différence entre justice et équité selon Aristote ?',a:'La justice = la loi est la même pour tous (égalité formelle). L\'équité = adapter la loi aux situations particulières pour donner à chacun ce qui lui est dû (proportionnalité). L\'équité corrige les lacunes de la loi générale.',auth:'Éthique à Nicomaque',d:3},
+  {cat:'Alain',q:'Pourquoi Alain dit-il que «quiconque pense commence toujours par se tromper» ?',a:'L\'erreur témoigne d\'un effort de pensée. On ne peut accéder directement à la vérité. La bêtise n\'est pas de se tromper, mais de ne pas reconnaître ses erreurs. «Toutes nos vérités sont des erreurs redressées.»',auth:'Propos',d:2},
+  {cat:'Hegel — Art',q:'Comment l\'art «renseigne-t-il l\'homme sur l\'humain» selon Hegel ?',a:'L\'art exprime l\'Esprit (la conscience de soi de l\'humanité) dans une forme sensible. Chaque époque crée des œuvres qui reflètent son niveau de conscience. La Pietà de Michel-Ange exprime la douleur et la dignité humaines de la Renaissance.',auth:'Esthétique',d:3},
+  {cat:'Socrate',q:'Pourquoi dire «Je sais que je ne sais rien» est-il le début de la sagesse ?',a:'La conscience de son ignorance est la condition du savoir : si on pense déjà savoir, on ne cherche plus. Les opinions non examinées font obstacle à la connaissance vraie. Il faut examiner continuellement ses croyances.',auth:'Apologie de Socrate',d:2},
+  {cat:'Épicure',q:'Quelle est la classification des désirs selon Épicure et pourquoi ?',a:'1) Naturels et nécessaires (manger, se loger → satisfaire). 2) Naturels mais non nécessaires (bonne nourriture → modérer). 3) Vains et non naturels (richesse, gloire → éliminer). Classer ses désirs permet d\'atteindre l\'ataraxie.',auth:'Lettre à Ménécée',d:3},
+  {cat:'Heidegger — Temps',q:'Pourquoi Heidegger dit-il que l\'homme est «jeté dans le monde» ?',a:'L\'homme trouve sa situation sans l\'avoir choisie (naissance, lieu, époque). Mais il se «projette» vers l\'avenir par ses choix et projets. L\'existence humaine est toujours en tension entre le passé qu\'on porte et le futur vers lequel on tend.',auth:'Être et Temps',d:3},
+  {cat:'Freud — Humiliations',q:'Quelles sont les 3 humiliations de l\'homme selon Freud ?',a:'1) Copernic : la Terre n\'est plus au centre de l\'univers. 2) Darwin : l\'homme descend de l\'animal, pas de Dieu. 3) Freud : l\'homme n\'est pas maître de lui-même (inconscient). Chaque humiliation destitue l\'homme de sa place centrale.',auth:'Introduction à la psychanalyse',d:2},
+  {cat:'Rousseau — Politique',q:'Quelle est la vraie liberté selon Rousseau dans le contrat social ?',a:'Ce n\'est pas l\'absence de règles mais l\'obéissance à la loi qu\'on s\'est prescrite (autonomie). En participant à la volonté générale, on est à la fois auteur et destinataire des lois. On obéit à soi-même.',auth:'Du Contrat Social',d:2},
+  {cat:'Arendt — Travail',q:'Quelle est la différence entre travail, œuvre et action chez Arendt ?',a:'Travail = production des nécessités vitales, cyclique et répétitif. Œuvre = création d\'objets durables (art, monuments), façon de s\'immortaliser. Action = vie politique, façon de se singulariser et de s\'engager avec les autres.',auth:'Condition de l\'homme moderne',d:3},
+  {cat:'Descartes — Technique',q:'Que signifie «se faire comme maître et possesseur de la nature» ?',a:'Objectif hygiéniste : comprendre la nature pour réduire les souffrances humaines. Le «comme» est important : agir comme si, pas devenir Dieu. Ce n\'est pas une invitation à l\'exploitation mais à la connaissance scientifique du monde.',auth:'Discours de la méthode',d:2},
+  {cat:'Bergson — Religion',q:'Quelle est la thèse de Bergson sur l\'universalité de la religion ?',a:'Il n\'existe aucune société sans religion, même les plus primitives. Cela prouve que la religion répond à un besoin vital : donner sens, cohérence et sécurité. L\'homme est le seul être à «suspendre son existence à des choses déraisonnables».',auth:'Les Deux sources de la morale et de la religion',d:2},
+  {cat:'Girard',q:'Qu\'est-ce que le mécanisme de la «victime émissaire» chez Girard ?',a:'Les sociétés primitives régulent leur violence en la concentrant sur une victime unique (bouc émissaire). Son sacrifice rétablit la paix. La religion serait née de ce mécanisme sacrificiel. Le mythe masque la violence originelle.',auth:'La Violence et le Sacré',d:3},
+  {cat:'Merleau-Ponty',q:'Comment l\'art «rend-il visible» selon Merleau-Ponty ?',a:'L\'artiste ne copie pas le monde mais le révèle à travers son regard incarné (corps + esprit). Cézanne peint la même montagne des dizaines de fois pour en saisir la présence vivante. L\'art est une connaissance sensible différente de la science.',auth:'L\'Œil et l\'esprit',d:3},
+  {cat:'Nietzsche — Vérité',q:'Pourquoi Nietzsche dit-il que «les vérités sont des illusions» ?',a:'Les philosophes ont fantasmé un «monde vrai» opposé à notre monde (imparfait). Mais la vérité n\'est pas une instance au-dessus de nous : elle est créée par l\'homme, donc par définition une interprétation. Toute vérité est intéressée.',auth:'Le Gai Savoir',d:3},
+  {cat:'Kant — Religion',q:'Pourquoi Kant pense-t-il qu\'on doit croire en Dieu même sans preuve ?',a:'Les 3 postulats pratiques (Dieu, immortalité de l\'âme, liberté) sont impossibles à prouver mais nécessaires à croire. Croire en Dieu garantit que la vertu sera récompensée, ce qui motive à agir moralement. Ce n\'est pas une connaissance mais une foi morale.',auth:'Critique de la raison pratique',d:3},
+  {cat:'Pascal — Religion',q:'Expliquez le «pari de Pascal» en deux phrases.',a:'On ne peut prouver l\'existence de Dieu. Si Dieu existe et qu\'on y croit, on gagne l\'éternité ; s\'il n\'existe pas, on n\'a rien perdu. Parier sur son existence est donc la stratégie rationnelle face à l\'incertitude absolue.',auth:'Pensées',d:2},
+  {cat:'Freud — Malaise',q:'Pourquoi la civilisation crée-t-elle un «malaise» selon Freud ?',a:'La civilisation réprime nos pulsions naturelles (dont Thanatos, pulsion de mort). Ce refoulement crée la culpabilité et le malaise. On ne peut être pleinement heureux car la société inhibe nos désirs. Mais on ne peut pas non plus s\'en passer.',auth:'Malaise dans la civilisation',d:3},
+  {cat:'Héraclite',q:'Que signifie «on ne se baigne jamais deux fois dans le même fleuve» ?',a:'Tout change : l\'eau s\'écoule, et nous-mêmes changeons à chaque instant. Le temps n\'est pas une mesure ajoutée au monde : il est le mouvement même du réel. Cette loi du devenir (Logos) gouverne tout ce qui existe.',auth:'Fragments',d:2},
+  {cat:'Schopenhauer',q:'Pourquoi Schopenhauer est-il pessimiste sur le bonheur ?',a:'La vie oscille entre souffrance (désir insatisfait) et ennui (désir assouvi). Le vouloir-vivre nous condamne à un manque permanent. Il n\'y a pas de bonheur durable possible, seulement des pauses dans la souffrance. Seul l\'art ou l\'ascèse échappent.',auth:'Le Monde comme volonté et représentation',d:3},
+  {cat:'Milgram',q:'Qu\'est-ce que l\'expérience de Milgram prouve philosophiquement ?',a:'65% des sujets administrent des chocs électriques potentiellement mortels sur ordre d\'un «scientifique». Cela montre que l\'autorité et le contexte institutionnel peuvent transformer des gens ordinaires en bourreaux. Confirme partiellement la thèse d\'Arendt sur la banalité du mal.',auth:'Obedience to Authority (1974)',d:2},
+  {cat:'Cournot',q:'Pourquoi la psychologie ne peut-elle pas être une science exacte selon Cournot ?',a:'La science exige exactitude (résultats reproductibles), régularité (phénomènes récurrents) et objectivité (le chercheur ne partage rien avec son objet). La psychologie étudie des états de conscience passagers, non reproductibles et subjectifs : elle ne remplit pas ces critères.',auth:'Traité de l\'enchaînement des idées fondamentales',d:2},
+  {cat:'Arendt — Politique',q:'Pourquoi Arendt dit-elle que nous avons «perdu le sens de la culture» ?',a:'La modernité a glorifié le travail : tout est devenu consommable, même l\'art et la culture. Nous avons renié le passé. La science est devenue la nouvelle religion. Sans tradition et sans art dans l\'espace public, l\'homme perd le sens de son existence.',auth:'La Crise de la culture',d:3},
+];
+
+// SRS state
+let fcState = {};
+let fcQueue = [];
+let fcCurrentIdx = 0;
+let fcFlipped = false;
+let fcSeenToday = 0;
+
+const INTERVALS = {1: 7, 2: 3, 3: 1, 4: 0}; // days until next review (0 = immediate)
+
+function fcInit() {
+  // Load state from sessionStorage
+  try { fcState = JSON.parse(sessionStorage.getItem('fcState')||'{}'); } catch(e){ fcState={}; }
+  fcBuildQueue();
+  fcUpdateHeader();
+}
+
+function fcBuildQueue() {
+  const now = Date.now();
+  fcQueue = CARDS.map((c,i)=>({...c, idx:i})).filter(c => {
+    const s = fcState[c.idx];
+    if(!s) return true; // never seen
+    return s.nextReview <= now;
+  });
+  // sort: unseen first, then by nextReview
+  fcQueue.sort((a,b)=>{
+    const sa = fcState[a.idx], sb = fcState[b.idx];
+    if(!sa && !sb) return 0;
+    if(!sa) return -1;
+    if(!sb) return 1;
+    return sa.nextReview - sb.nextReview;
+  });
+  fcCurrentIdx = 0;
+  if(fcQueue.length > 0) { fcShow(); document.getElementById('fc-main').style.display=''; document.getElementById('fc-done').style.display='none'; }
+  else { document.getElementById('fc-main').style.display='none'; document.getElementById('fc-done').style.display='block'; }
+  fcUpdateStats();
+}
+
+function fcShow() {
+  if(fcCurrentIdx >= fcQueue.length) { document.getElementById('fc-main').style.display='none'; document.getElementById('fc-done').style.display='block'; return; }
+  const c = fcQueue[fcCurrentIdx];
+  const s = fcState[c.idx];
+  document.getElementById('fc-cat').textContent = c.cat;
+  document.getElementById('fc-cat2').textContent = c.cat;
+  document.getElementById('fc-q').textContent = c.q;
+  document.getElementById('fc-a').textContent = c.a;
+  document.getElementById('fc-auth').textContent = '— ' + c.auth;
+  // difficulty badge
+  const db = document.getElementById('fc-diff-badge');
+  const dLevel = s ? s.level : c.d;
+  db.className = 'fc-difficulty fc-d'+dLevel;
+  db.textContent = ['','Facile','Bien','Difficile','À revoir'][dLevel]||'';
+  // counter
+  document.getElementById('fc-ctr').textContent = `${fcCurrentIdx+1} / ${fcQueue.length}`;
+  document.getElementById('fc-queue-count').textContent = `${fcQueue.length} carte${fcQueue.length>1?'s':''} à réviser`;
+  const total = CARDS.length - Object.keys(fcState).filter(k=>fcState[k].level===1).length;
+  document.getElementById('fc-queue-msg').textContent = `${CARDS.length - fcQueue.length} carte${(CARDS.length-fcQueue.length)>1?'s':''} maîtrisées`;
+  // flip reset
+  fcFlipped = false;
+  document.getElementById('fc-card').classList.remove('flipped');
+  document.getElementById('fc-before-flip').style.display='';
+  document.getElementById('fc-rating-section').style.display='none';
+}
+
+function fcFlip() {
+  if(!fcFlipped) {
+    document.getElementById('fc-card').classList.add('flipped');
+    fcFlipped = true;
+    document.getElementById('fc-before-flip').style.display='none';
+    document.getElementById('fc-rating-section').style.display='';
+  }
+}
+
+function fcRate(level) {
+  if(!fcFlipped) return;
+  const c = fcQueue[fcCurrentIdx];
+  const daysUntil = INTERVALS[level];
+  const nextReview = daysUntil === 0 ? Date.now() + 60000 : Date.now() + daysUntil*86400000;
+  fcState[c.idx] = { level, nextReview, lastReview: Date.now() };
+  try { sessionStorage.setItem('fcState', JSON.stringify(fcState)); } catch(e){}
+  fcSeenToday++;
+  fcCurrentIdx++;
+  fcUpdateStats();
+  fcUpdateHeader();
+  if(fcCurrentIdx >= fcQueue.length) { document.getElementById('fc-main').style.display='none'; document.getElementById('fc-done').style.display='block'; }
+  else fcShow();
+}
+
+function fcUpdateStats() {
+  const counts = {1:0,2:0,3:0,4:0};
+  Object.values(fcState).forEach(s=>{ if(counts[s.level]!==undefined) counts[s.level]++; });
+  document.getElementById('fc-s1').textContent = counts[1];
+  document.getElementById('fc-s2').textContent = counts[2];
+  document.getElementById('fc-s3').textContent = counts[3];
+  document.getElementById('fc-s4').textContent = counts[4];
+}
+
+function fcUpdateHeader() {
+  const due = CARDS.filter((c,i)=>{ const s=fcState[i]; return !s||s.nextReview<=Date.now(); }).length;
+  document.getElementById('hdr-seen').textContent = fcSeenToday;
+  document.getElementById('hdr-due').textContent = due;
+}
+
+function fcShuffle() {
+  for(let i=fcQueue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcQueue[i],fcQueue[j]]=[fcQueue[j],fcQueue[i]];}
+  fcCurrentIdx=0; fcShow();
+}
+
+function fcReset() {
+  if(!confirm('Réinitialiser toutes les progressions ?')) return;
+  fcState={}; sessionStorage.removeItem('fcState'); fcSeenToday=0;
+  fcBuildQueue(); fcUpdateStats(); fcUpdateHeader();
+}
+
+function fcRestartAll() {
+  fcBuildQueue(); // already handles all due cards
+  // Force all cards back into queue
+  fcQueue = CARDS.map((c,i)=>({...c,idx:i}));
+  fcCurrentIdx=0; document.getElementById('fc-main').style.display=''; document.getElementById('fc-done').style.display='none';
+  fcShow();
+}
+
+function fcRestartHard() {
+  fcQueue = CARDS.map((c,i)=>({...c,idx:i})).filter(c=>{ const s=fcState[c.idx]; return !s||s.level>=3; });
+  if(fcQueue.length===0){alert('Aucune carte difficile !'); return;}
+  fcCurrentIdx=0; document.getElementById('fc-main').style.display=''; document.getElementById('fc-done').style.display='none';
+  fcShow();
+}
+
+// =================== QUIZ ===================
+const QUESTIONS = [
+  {q:'Selon Marx, qu\'est-ce qui distingue l\'architecte de l\'abeille ?',opts:['L\'architecte est plus fort physiquement','L\'architecte se représente mentalement son œuvre avant de la construire','L\'architecte travaille en groupe','L\'architecte n\'a pas besoin de nature'],a:1,expl:'Marx : l\'architecte «médiatise» son travail via la conscience et l\'imagination. L\'abeille construit par instinct. C\'est la conscience qui humanise le travail.'},
+  {q:'Quel philosophe affirme que «Dieu est mort» ?',opts:['Kant','Rousseau','Nietzsche','Marx'],a:2,expl:'Nietzsche dans Le Gai Savoir. Ce n\'est pas théologique mais culturel : les valeurs chrétiennes ont perdu leur force. L\'homme doit créer ses propres valeurs.'},
+  {q:'La «banalité du mal» selon Arendt désigne :',opts:['Des crimes peu graves','Le mal commis par des gens ordinaires sans réflexion morale','La normalisation de la violence','Le manque de punition des coupables'],a:1,expl:'La banalité du mal = le mal surgit de l\'absence de pensée. Eichmann était ordinaire mais n\'a jamais réfléchi aux conséquences de ses actes.'},
+  {q:'Pour Hobbes, l\'état de nature est :',opts:['Idyllique et harmonieux','Une guerre de tous contre tous','Semblable à la vie en société','Gouverné par la loi naturelle'],a:1,expl:'Hobbes : état de nature = guerre permanente de «tous contre tous». Vie brève et violente. Rien n\'est juste ou injuste en dehors d\'un pouvoir commun.'},
+  {q:'L\'impératif catégorique de Kant est :',opts:['Agir pour obtenir un résultat','Suivre ses désirs naturels','Agir par devoir, de manière désintéressée et universalisable','Obéir aux lois de l\'État'],a:2,expl:'L\'impératif catégorique = agir par devoir, sans condition, universalisable. «Agis comme si ta maxime devait devenir une loi universelle.» ≠ Impératif hypothétique (conditionnel).'},
+  {q:'La catharsis chez Aristote désigne :',opts:['Une technique de respiration','La purification des émotions par la tragédie','L\'imitation de la nature','La création de belles formes'],a:1,expl:'Aristote : la tragédie provoque peur et pitié chez le spectateur, entraînant une purification (catharsis) de ces émotions. L\'art éduque en émovant.'},
+  {q:'Bergson distingue le temps objectif de :',opts:['Le temps mythique','La durée (temps vécu intérieurement)','Le temps cyclique','Le temps historique'],a:1,expl:'Bergson : temps scientifique = mesurable (horloge). La durée = temps vécu, continu, qualitatif, subjectif. La durée est la vraie vie du temps.'},
+  {q:'Les 3 humiliations de l\'homme selon Freud sont causées par :',opts:['Descartes, Darwin, Newton','Copernic, Darwin, Freud lui-même','Galilée, Marx, Freud','Newton, Einstein, Freud'],a:1,expl:'Copernic (Terre ≠ centre), Darwin (homme descend de l\'animal), Freud lui-même (l\'homme ≠ maître de lui-même). Chaque fois, destitution de l\'homme du centre.'},
+  {q:'Selon Rousseau, l\'homme à l\'état de nature est :',opts:['Naturellement mauvais et violent','Bon et corrompu par la société','Neutre, ni bon ni mauvais','Rationnel et politique'],a:1,expl:'Rousseau : l\'homme est naturellement bon, doté d\'amour de soi et de pitié. C\'est la société, la propriété et les inégalités qui le corrompent.'},
+  {q:'La religion est «l\'opium du peuple» pour :',opts:['Nietzsche','Freud','Marx','Girard'],a:2,expl:'Marx : la religion console les opprimés sans supprimer la cause de leur souffrance. Elle endort les consciences et fait accepter l\'injustice.'},
+  {q:'Selon Kant, le beau est :',opts:['Ce qui est utile','Ce qui plaît universellement sans concept','Ce qui imite parfaitement la nature','Ce qui exprime une idée morale'],a:1,expl:'Critique de la faculté de juger : le beau plaît de manière désintéressée, sans utilité ni concept. Subjectif mais prétend à l\'universalité.'},
+  {q:'L\'ataraxie chez Épicure désigne :',opts:['L\'extase divine','L\'absence de trouble, la tranquillité de l\'âme','La pratique de la vertu','La contemplation des Idées'],a:1,expl:'Ataraxie = absence de trouble, paix de l\'âme. But du bonheur selon Épicure. On y accède en ne craignant ni les dieux ni la mort, et en classant ses désirs.'},
+  {q:'Pour Arendt, quelle activité crée un monde «durable» ?',opts:['Le travail','La consommation','L\'œuvre (y compris l\'art)','L\'action politique'],a:2,expl:'Arendt distingue travail (cyclique, vital), œuvre (durable, art/monuments), action (politique). L\'art appartient à l\'œuvre : il crée un monde habitable et durable.'},
+  {q:'Saint Augustin dit qu\'il y a :',opts:['2 temps : passé et futur','3 présents dans la conscience','Un seul temps : le présent éternel','4 temps différents'],a:1,expl:'Augustin : 3 présents = présent du passé (mémoire), présent du présent (attention), présent du futur (attente). Le temps n\'est pas dans les choses mais dans la conscience.'},
+  {q:'Héraclite affirme que le temps est :',opts:['Une illusion','Le mouvement même du monde (devenir)','Une mesure objective','Une création divine'],a:1,expl:'«On ne se baigne jamais deux fois dans le même fleuve.» Tout est mouvement constant. Le temps n\'est pas ajouté au monde : il est le mouvement même du réel.'},
+  {q:'Alain dit que «quiconque pense commence toujours par...»',opts:['avoir raison','se tromper','douter de tout','questionner l\'évidence'],a:1,expl:'L\'erreur est une étape nécessaire vers la vérité. Elle témoigne d\'un effort de pensée. La bêtise = ne pas reconnaître ses erreurs.'},
+  {q:'Nietzsche pense que la vérité est :',opts:['Absolue et universelle','Une invention humaine dont on a oublié l\'origine','Accessible uniquement par la foi','Donnée uniquement par la science'],a:1,expl:'Nietzsche bouleverse la philosophie : «Les vérités sont des illusions dont on a oublié qu\'elles le sont.» Pas de vérité désintéressée : elle naît des désirs humains.'},
+  {q:'Le libre arbitre est «une illusion» selon :',opts:['Kant','Spinoza','Descartes','Rousseau'],a:1,expl:'Spinoza : nous croyons être libres parce que nous ignorons les causes qui nous déterminent. Tout est déterminé. La liberté apparente est une méconnaissance de nos causes.'},
+  {q:'La «victime émissaire» chez Girard sert à :',opts:['Punir les coupables','Canaliser la violence collective par le sacrifice d\'un bouc émissaire','Honorer les dieux','Éduquer les enfants'],a:1,expl:'Girard : les sociétés régulent leur violence en la concentrant sur une victime unique. Son sacrifice rétablit la paix. La religion serait née de ce mécanisme sacrificiel.'},
+  {q:'Selon Freud, le «malaise dans la civilisation» vient de :',opts:['L\'ignorance scientifique','La répression des pulsions par la civilisation','L\'absence de religion','Les guerres entre nations'],a:1,expl:'La civilisation refoule nos pulsions naturelles (Thanatos). Ce refoulement crée la culpabilité. L\'homme ne peut être pleinement heureux en société car elle inhibe ses désirs naturels.'},
+];
+let qScore=0,qAnswered=0;
+function initQuiz(){qScore=0;qAnswered=0;updateQS();const c=document.getElementById('quiz-container');c.innerHTML='';QUESTIONS.forEach((q,i)=>{const d=document.createElement('div');d.className='quiz-question';d.id='qq'+i;d.innerHTML=`<div class="quiz-q-text"><strong>${i+1}.</strong> ${q.q}</div><div class="quiz-options">${q.opts.map((o,j)=>`<button class="quiz-option" onclick="ansQ(${i},${j})" id="qo${i}-${j}">${o}</button>`).join('')}</div><div class="quiz-explanation" id="qe${i}">💡 ${q.expl}</div>`;c.appendChild(d);});}
+function ansQ(qi,oi){const q=QUESTIONS[qi];document.querySelectorAll(`#qq${qi} .quiz-option`).forEach(o=>{o.disabled=true;o.onclick=null;});if(oi===q.a){document.getElementById(`qo${qi}-${oi}`).classList.add('correct');qScore++;}else{document.getElementById(`qo${qi}-${oi}`).classList.add('wrong');document.getElementById(`qo${qi}-${q.a}`).classList.add('revealed-correct');}document.getElementById(`qe${qi}`).style.display='block';qAnswered++;updateQS();}
+function updateQS(){document.getElementById('qs-num').textContent=qScore;document.getElementById('qs-ans').textContent=qAnswered+' répondues';}
+function resetQuiz(){initQuiz();}
+
+// =================== NOTIONS ===================
+const NOTIONS = [
+  {id:'art',title:'L\'Art',etym:'Du grec technè = technique. Distinct de la technique depuis le XVIIIe siècle.',short:'Contemplation désintéressée, imitation, dévoilement',def:'Une œuvre d\'art est destinée à être contemplée (non utilisée), elle est potentiellement immortelle, unique et imprévisible. Elle est le produit de la liberté de l\'artiste.',philosophes:[
+    {name:'Platon',period:'IVe s. av. J.-C.',work:'La République',these:'L\'art est une imitation trompeuse. Il copie le monde sensible, qui lui-même est une copie des Idées. L\'artiste produit donc une copie de copie, trois degrés éloigné de la vérité. L\'art flatte les émotions et les passions, il éloigne de la raison et peut corrompre l\'âme.',citation:'«Le peintre, en produisant ce qu\'il produit, n\'imite que l\'apparence.»',exemple:'Le Jugement de Pâris (Rubens) : séduit les sens sans conduire à la vérité de la beauté.'},
+    {name:'Aristote',period:'IVe s. av. J.-C.',work:'La Poétique',these:'L\'art est une mimèsis créatrice et instructive, pas simple copie. La tragédie provoque la catharsis : en éprouvant peur et pitié, le spectateur se purifie de ces émotions. L\'art révèle des vérités universelles à travers des situations particulières.',citation:'«La poésie est plus philosophique et plus noble que l\'histoire.»',exemple:'Œdipe Roi (Sophocle) : catharsis = peur du destin, pitié pour Œdipe.'},
+    {name:'Kant',period:'XVIIIe s.',work:'Critique de la faculté de juger',these:'Le beau plaît de manière désintéressée, sans utilité ni concept. Le jugement de goût est subjectif («cela me plaît») mais prétend à l\'universalité («c\'est beau»). L\'art véritable est libre, il ne vise aucun but extérieur (éducation, propagande).',citation:'«Est beau ce qui plaît universellement sans concept.»',exemple:'La Grande Vague de Kanagawa (Hokusai) : beauté pure, sans message utilitaire.'},
+    {name:'Hegel',period:'XIXe s.',work:'Esthétique (1835)',these:'L\'art exprime l\'Esprit (la conscience de soi de l\'humanité) dans une forme sensible. Chaque époque produit des œuvres qui reflètent son niveau de conscience. L\'art, la religion et la philosophie sont trois formes de révélation de la vérité.',citation:'«L\'art renseigne l\'homme sur l\'humain.»',exemple:'La Pietà de Michel-Ange : exprime la douleur humaine et la dignité spirituelle de la Renaissance.'},
+    {name:'Heidegger',period:'XXe s.',work:'L\'Origine de l\'œuvre d\'art (1935)',these:'L\'art dévoile la vérité en confrontant le monde (vie humaine, culture) et la terre (matière brute, ce qui résiste). L\'œuvre n\'est pas une imitation mais un événement de dévoilement.',citation:'«L\'œuvre d\'art est le lieu où le monde et la terre se confrontent et se font jour.»',exemple:'Les Souliers (Van Gogh) : révèle la vie du paysan, sa peine, son rapport au monde.'},
+    {name:'Merleau-Ponty',period:'XXe s.',work:'L\'Œil et l\'esprit (1961)',these:'L\'artiste révèle le monde à travers son regard incarné (corps et esprit ensemble). La perception est une intelligence incarnée. L\'art est une connaissance sensible différente de la science : il ne démontre pas, il montre.',citation:'«L\'art ne reproduit pas le visible, il rend visible.»',exemple:'La Montagne Sainte-Victoire (Cézanne) : peinte des dizaines de fois pour en saisir la présence vivante.'},
+    {name:'Arendt',period:'XXe s.',work:'Condition de l\'homme moderne (1958)',these:'L\'art appartient à l\'œuvre (créer un monde durable) ≠ travail (cyclique, vital) ≠ technique (efficacité). L\'art rend le monde habitable, durable et porteur de sens. Il s\'oppose à la société de consommation qui rend tout périssable.',citation:'«L\'art ne transforme pas le monde en outil, mais révèle sa pluralité et sa signification.»',exemple:'Les Demoiselles d\'Avignon (Picasso) : rompt avec les conventions, ouvre un dialogue collectif.'},
+  ],retenir:'Art ≠ technique. Platon (danger) → Aristote (catharsis) → Kant (désintérêt) → Hegel (Esprit) → Heidegger (vérité) → Merleau-Ponty (perception) → Arendt (durabilité).'},
+  {id:'bonheur',title:'Le Bonheur',etym:'État de satisfaction intense, durable et stable ≠ plaisir (bref, discontinu).',short:'Ataraxie, vertu, idéal de l\'imagination',def:'Kant : «La variété de nos penchants satisfaite, aussi bien extensive (diversité) qu\'intensive (intensité), quant au degré et à la durée.» Le bonheur est toujours un état global et durable, pas une série de plaisirs.',philosophes:[
+    {name:'Épicure',period:'IIIe s. av. J.-C.',work:'Lettre à Ménécée',these:'Le bonheur = ataraxie (absence de trouble) + aponie (absence de douleur). 4 remèdes : ne pas craindre les dieux ni la mort, se convaincre que le bonheur est accessible, se dire que la douleur est surmontable. Classer ses désirs.',citation:'«Il faut se rappeler que l\'avenir n\'est ni à nous, ni tout à fait non à nous.»',exemple:'Classification des désirs : naturels nécessaires (manger, se loger) → satisfaire ; vains (gloire, richesse) → éliminer.'},
+    {name:'Sénèque (Stoïcisme)',period:'Ier s.',work:'La Vie heureuse',these:'La vie heureuse est une vie vertueuse, délivrée des désirs et tournée vers l\'intelligence. Le sage est heureux non par les biens extérieurs mais par sa maîtrise intérieure.',citation:'«La vertu est quelque chose d\'élevé et de royal ; le plaisir, quelque chose de bas et de servile.»',exemple:'Le sage stoïcien reste serein face à la perte, la maladie, la mort : son bonheur ne dépend pas des circonstances.'},
+    {name:'Descartes',period:'XVIIe s.',work:'Correspondance avec la princesse Élisabeth',these:'Pour être heureux, il faut changer ses désirs plutôt que transformer l\'ordre du monde. Maîtriser ses passions par la raison. Ne désirer que ce qui dépend de notre volonté.',citation:'«Il vaut mieux changer ses désirs que l\'ordre du monde.»',exemple:'Face à un obstacle infranchissable : changer d\'objectif plutôt que de s\'épuiser à lutter.'},
+    {name:'Rousseau',period:'XVIIIe s.',work:'Julie ou la Nouvelle Héloïse',these:'C\'est le désir lui-même, non sa satisfaction, qui rend heureux. La satisfaction comble le manque et crée l\'ennui. Le bonheur est dans l\'élan, la tension vers quelque chose.',citation:'«Malheur à qui n\'a plus rien à désirer !»',exemple:'Le plaisir de l\'anticipation (les vacances à venir) > le plaisir réalisé (les vacances effectives).'},
+    {name:'Kant',period:'XVIIIe s.',work:'Critique de la raison pratique',these:'Le bonheur est un idéal de l\'imagination, non de la raison. Bonheur et vertu sont séparés : agir moralement ne rend pas nécessairement heureux, mais nous en rend dignes. Le but moral n\'est pas le bonheur mais d\'être digne d\'y accéder.',citation:'«Le bonheur est un idéal non de la raison mais de l\'imagination.»',exemple:'On peut être vertueux et malheureux (Socrate condamné à mort). On peut être heureux et immoral (tyran).'},
+    {name:'Schopenhauer',period:'XIXe s.',work:'Le Monde comme volonté et représentation',these:'Pessimisme radical. La vie oscille entre souffrance (désir insatisfait = manque) et ennui (désir assouvi = vide). Le vouloir-vivre est insatiable. Le bonheur durable est une illusion. Seuls l\'art ou l\'ascèse permettent d\'échapper momentanément.',citation:'«La vie oscille comme un pendule, de droite à gauche, de la souffrance à l\'ennui.»',exemple:'Après l\'achat tant attendu, rapidement l\'ennui s\'installe et un nouveau désir émerge.'},
+    {name:'Nietzsche',period:'XIXe s.',work:'Ainsi parlait Zarathoustra',these:'Rejet du bonheur comme but. L\'homme doit vouloir la puissance créatrice, se dépasser (surhomme). Le bonheur des faibles est ressentiment. Vouloir la vie malgré la souffrance : «Amor fati» (amour du destin).',citation:'«L\'homme est quelque chose qui doit être surpassé.»',exemple:'L\'artiste qui crée en souffrant mais dont l\'œuvre transcende sa douleur.'},
+  ],retenir:'Bonheur ≠ plaisir. Épicure (ataraxie) → Sénèque (vertu) → Descartes (maîtrise des désirs) → Rousseau (le désir lui-même) → Kant (idéal de l\'imagination) → Schopenhauer (illusion) → Nietzsche (dépassement).'},
+  {id:'conscience',title:'La Conscience',etym:'Du latin con-scientia = «connaissance avec». Savoir avec et par soi-même.',short:'Connaissance de soi, cogito, inconscient',def:'La conscience est la faculté de se retourner sur ses propres actes et pensées. Elle permet à l\'homme de se distinguer de l\'animal et de se rapporter à soi-même, aux autres et au monde.',philosophes:[
+    {name:'Descartes',period:'XVIIe s.',work:'Méditations Métaphysiques',these:'La conscience (le «je pense») est la seule certitude indubitable. Je peux douter de tout, sauf du fait que je doute — ce qui prouve que je pense, donc que j\'existe. Le sujet pensant est défini par la pensée.',citation:'«Je pense donc je suis»',exemple:'Même si tout est illusion (un démon me trompe), le fait que j\'aie une illusion prouve que je pense, donc que j\'existe.'},
+    {name:'Freud',period:'XXe s.',work:'Introduction à la psychanalyse',these:'La conscience ne représente que 1/10 de la personnalité. La quasi-totalité de notre vie psychique réside dans l\'inconscient (pulsions refoulées, désirs inavouables). L\'inconscient agit sur la conscience sans qu\'elle en soit consciente.',citation:'«L\'homme n\'est pas maître en sa propre maison.»',exemple:'Les actes manqués, lapsus, rêves : moments où l\'inconscient fait irruption dans la vie consciente.'},
+    {name:'Arendt',period:'XXe s.',work:'Eichmann à Jérusalem',these:'La conscience morale repose sur la pensée (dialogue avec soi-même). Le «sens commun» garantit la réalité partagée avec les autres. Penser = se dédoubler, prendre de la distance. Eichmann n\'a pas pensé, donc n\'a pas pu juger moralement.',citation:'«L\'absence de pensée est l\'absence de conscience morale.»',exemple:'Eichmann : il «anesthésie sa conscience» en se limitant à exécuter des ordres sans réfléchir.'},
+  ],retenir:'Conscience = connaissance de soi + du monde. Descartes (cogito) → Freud (inconscient) → Arendt (conscience morale). Avoir la conscience ≠ l\'utiliser.'},
+  {id:'devoir',title:'Le Devoir',etym:'Du latin debitum = ce qu\'on doit. Obligation morale ou juridique.',short:'Impératif catégorique, morale déontologique',def:'Le devoir est une obligation que l\'on se donne librement (autonomie) — à distinguer de la contrainte (force extérieure). La morale s\'interroge sur ce qu\'il faut faire.',philosophes:[
+    {name:'Kant',period:'XVIIIe s.',work:'Fondements de la métaphysique des mœurs',these:'Distinction fondamentale entre impératif catégorique (agir par devoir, désintéressé, universalisable = moral) et hypothétique (agir pour un résultat, conditionnel = non moral). La morale exige d\'agir par devoir, non par intérêt.',citation:'«Agis de telle sorte que la maxime de ta volonté puisse toujours valoir comme principe d\'une législation universelle.»',exemple:'Dire la vérité même si ça me désavantage (catégorique) ≠ dire la vérité pour avoir bonne réputation (hypothétique).'},
+    {name:'Mill (Utilitarisme)',period:'XIXe s.',work:'L\'Utilitarisme',these:'L\'action morale est celle qui produit le plus de bonheur pour le plus grand nombre. Les conséquences seules comptent. La morale utilitariste s\'oppose à Kant : c\'est l\'impératif hypothétique qui domine.',citation:'«La plus grande somme de bonheur pour le plus grand nombre.»',exemple:'Mentir pour sauver une vie : moral selon l\'utilitarisme. Immoral selon Kant.'},
+    {name:'Aristote',period:'IVe s. av. J.-C.',work:'Éthique à Nicomaque',these:'La vertu est une disposition stable à agir bien, acquise par l\'habitude. Le bien moral = le juste milieu entre deux excès. Le courage est entre lâcheté et témérité.',citation:'«Nous sommes maîtres de nos actions.»',exemple:'La générosité est le juste milieu entre l\'avarice et la prodigalité.'},
+  ],retenir:'Devoir ≠ contrainte. Kant (catégorique/hypothétique, déontologie) ↔ Mill (utilitarisme, conséquences). La morale vient de l\'intérieur (Kant) ou de l\'extérieur (conséquences).'},
+  {id:'etat',title:'L\'État',etym:'Du latin stare = se tenir debout. Institution qui se tient au-dessus des individus.',short:'Contrat social, monopole de la violence, totalitarisme',def:'L\'État est l\'ensemble d\'institutions organisées dont le but est de garantir le bon fonctionnement de la société. Distinction : société (axe horizontal, citoyens) ≠ État (axe vertical, pouvoir qui dirige).',philosophes:[
+    {name:'Hobbes',period:'XVIIe s.',work:'Le Léviathan (1651)',these:'L\'État est nécessaire pour éviter la guerre de tous contre tous (état de nature). On cède tous ses droits à un souverain absolu (le Léviathan) en échange de la sécurité. L\'absolutisme est préférable à l\'anarchie.',citation:'«L\'homme est un loup pour l\'homme.»',exemple:'Sans État = zones de non-droit, gangs, guerres civiles.'},
+    {name:'Locke',period:'XVIIe s.',work:'Traité du gouvernement civil',these:'L\'État doit protéger les droits naturels (vie, propriété, liberté). Le contrat social est limité : le peuple peut résister si l\'État viole ces droits. Origine du libéralisme politique.',citation:'«Le pouvoir politique ne peut aller au-delà de ce qui est nécessaire au bien commun.»',exemple:'La Déclaration d\'Indépendance américaine s\'inspire directement de Locke.'},
+    {name:'Rousseau',period:'XVIIIe s.',work:'Du Contrat Social',these:'Le contrat social = accord entre citoyens égaux → volonté générale. Le souverain = le peuple lui-même. La vraie liberté = obéissance à la loi qu\'on s\'est prescrite (autonomie).',citation:'«Chacun de nous met en commun sa personne et toute sa puissance sous la suprême direction de la volonté générale.»',exemple:'La démocratie directe comme idéal de la volonté générale.'},
+    {name:'Weber',period:'XIXe-XXe s.',work:'Le Savant et le Politique',these:'L\'État est le détenteur du monopole de la violence physique légitime. Ce qui distingue l\'État des autres organisations, c\'est ce monopole sur un territoire donné.',citation:'«L\'État est une communauté humaine qui revendique le monopole de l\'usage légitime de la force.»',exemple:'Seul l\'État peut légalement emprisonner, faire la guerre, lever des impôts.'},
+    {name:'Arendt',period:'XXe s.',work:'Les Origines du totalitarisme',these:'L\'État peut devenir totalitaire : il atomise les individus, brise les liens sociaux, remplace la morale par l\'idéologie. Le totalitarisme est la perversion complète du politique.',citation:'«Le mal n\'est jamais «radical» mais seulement extrême.»',exemple:'Le nazisme et le stalinisme comme exemples de totalitarisme.'},
+  ],retenir:'L\'État garantit la sécurité (Hobbes), les droits (Locke), la volonté générale (Rousseau). Mais l\'État peut aussi être tyrannique (Arendt). Weber : monopole de la violence légitime.'},
+  {id:'inconscient',title:'L\'Inconscient',etym:'Du latin in-consciens = qui n\'a pas conscience. Hypothèse centrale de Freud.',short:'Ça, Moi, Surmoi, mécanismes de défense',def:'L\'inconscient désigne (selon Freud) l\'ensemble des représentations, pulsions et désirs qui échappent à notre conscience mais qui agissent néanmoins sur elle. Il représente 9/10 de notre personnalité.',philosophes:[
+    {name:'Freud',period:'XIXe-XXe s.',work:'Introduction à la psychanalyse / L\'Interprétation des rêves',these:'L\'inconscient est structuré. 2e topique : Ça (pulsions) / Moi (raison) / Surmoi (normes). Mécanismes de défense : déni, déplacement, rationalisation, sublimation. La psychanalyse guérit «par la parole» en faisant remonter l\'inconscient.',citation:'«L\'inconscient est le psychique lui-même et son essentielle réalité.»',exemple:'Rêve : porte royale vers l\'inconscient. Actes manqués : lapsus, oublis révélateurs.'},
+    {name:'Leibniz',period:'XVIIe s.',work:'Nouveaux Essais sur l\'entendement humain',these:'Avant Freud, Leibniz parle de «petites perceptions» : des perceptions inconscientes qui influencent l\'esprit sans qu\'on en soit conscient. Ex : le bruit de la mer qu\'on n\'entend plus mais qui agit toujours.',citation:'«Il y a à tout moment une infinité de perceptions en nous, mais sans aperception.»',exemple:'On s\'habitue au bruit d\'une horloge sans le percevoir consciemment, mais le corps réagit à son absence.'},
+    {name:'Spinoza',period:'XVIIe s.',work:'L\'Éthique',these:'Avant Freud, Spinoza dit que nous ignorons les causes qui nous déterminent. Ce qu\'on appelle «libre arbitre» est en réalité l\'ignorance de nos véritables causes. Nous nous croyons libres parce que nous méconnaissons les vraies raisons de nos actes.',citation:'«Les hommes se croient libres parce qu\'ils ont conscience de leurs actions mais ignorent les causes qui les déterminent.»',exemple:'On dit «j\'ai décidé spontanément» alors que des influences inconscientes (publicité, pression sociale) ont orienté le choix.'},
+  ],retenir:'L\'inconscient chez Freud : Ça / Moi / Surmoi. Mécanismes de défense. Guérison par la parole (psychanalyse). Leibniz et Spinoza anticipent Freud. L\'inconscient remet en cause le libre arbitre.'},
+  {id:'justice',title:'La Justice',etym:'Du latin justus = conforme au droit. Double sens : institution et valeur morale.',short:'Égalité, équité, droit naturel vs positif',def:'La justice renvoie à la fois à des règles légales (droit positif) et à des valeurs universelles (légitimité). Légal ≠ légitime : une loi peut être légale mais injuste.',philosophes:[
+    {name:'Aristote',period:'IVe s. av. J.-C.',work:'Éthique à Nicomaque',these:'Justice = égalité (la loi est la même pour tous) + équité (proportionnalité, donner à chacun ce qui lui est dû). 3 formes : distributive (selon le mérite), commutative (dans les échanges), corrective (punir les infractions).',citation:'«La justice est égalité, mais non pas pour tous, seulement pour les égaux.»',exemple:'Justice distributive : une prime proportionnelle au mérite. Commutative : échange à valeur égale. Corrective : amende proportionnelle à l\'infraction.'},
+    {name:'Sophocle — Antigone',period:'Ve s. av. J.-C.',work:'Antigone',these:'Conflit entre justice divine (naturelle, universelle, non écrite) et justice conventionnelle (loi humaine, positive). Antigone choisit la loi divine. La loi positive peut être injuste si elle contredit la loi naturelle.',citation:'«Ces lois-là ne datent ni d\'aujourd\'hui ni d\'hier, et nul ne sait le jour où elles ont paru.»',exemple:'Les lois nazies étaient légales mais illégitimes : elles violaient les droits naturels.'},
+    {name:'Rawls',period:'XXe s.',work:'Théorie de la justice (1971)',these:'La justice repose sur 2 principes choisis derrière un «voile d\'ignorance» (sans savoir sa position sociale) : 1) Égalité des libertés fondamentales. 2) Les inégalités ne sont admissibles que si elles profitent aux plus défavorisés.',citation:'«Les inégalités sociales sont justes si elles profitent aux membres les moins avantagés de la société.»',exemple:'Un impôt progressif (plus on gagne, plus on paye) est juste selon Rawls car il bénéficie aux plus pauvres.'},
+    {name:'Mythe des Atrides',period:'Antiquité',work:'Eschyle, Les Euménides',these:'Le mythe montre le passage de la vengeance (justice privée, cyclique) à la justice institutionnelle (tribunal, arbitre). La vengeance enfonce dans un cycle infini de violence. Athéna crée l\'Aréopage pour y mettre fin.',citation:'Distinction vengeance (désir personnel) vs justice (arbitrage par la loi).',exemple:'La vendetta corse vs. le tribunal : deux conceptions de la réponse au crime.'},
+  ],retenir:'Justice ≠ vengeance. Aristote (égalité + équité) → Sophocle (loi divine vs humaine) → Rawls (voile d\'ignorance). Légal ≠ légitime.'},
+  {id:'langage',title:'Le Langage',etym:'Du latin lingua = langue. Système de signes permettant la communication.',short:'Logos, communication animale, fonction normative',def:'Le langage humain (logos) est distinct de la communication animale : il permet d\'exprimer des idées abstraites, de distinguer le juste de l\'injuste, de voter des lois. C\'est l\'un des critères fondamentaux de l\'humanité.',philosophes:[
+    {name:'Aristote',period:'IVe s. av. J.-C.',work:'Politique / Traité de l\'Âme',these:'L\'animal signifie douleur et plaisir (voix). L\'homme possède le logos (discours rationnel) : il peut exprimer le juste et l\'injuste, le bien et le mal. Ce logos fonde la communauté politique. Sans langage, pas de lien social ni de loi.',citation:'«L\'homme est le seul des animaux à avoir la parole.»',exemple:'La danse des abeilles transmet une information (direction du nectar) mais ne peut débattre de la légitimité d\'une loi.'},
+    {name:'Descartes',period:'XVIIe s.',work:'Discours de la méthode',these:'L\'animal est une machine corporelle : son comportement est purement mécanique. Sans âme, sans pensée, il est «dépourvu de langage et donc de pensée». Le langage humain suppose nécessairement la pensée (âme).',citation:'«Si les bêtes avaient une âme pareille à la nôtre, elles pourraient [...] nous faire entendre leur pensée.»',exemple:'Un perroquet répète des sons sans comprendre = machine. L\'homme adapte son langage à des situations nouvelles.'},
+    {name:'Bergson',period:'XIXe-XXe s.',work:'L\'Évolution créatrice / Essai sur les données immédiates',these:'Le langage trahit la réalité vivante : les mots figent et immobilisent ce qui est mouvant et subjectif. «La pensée demeure incommensurable avec le langage.» L\'art peut exprimer ce que le langage ne peut pas saisir.',citation:'«Le mot recouvre la singularité de l\'expérience vécue.»',exemple:'Le mot «tristesse» ne saisit pas la singularité de MA tristesse de ce moment précis.'},
+    {name:'Wittgenstein',period:'XXe s.',work:'Investigations philosophiques',these:'«Les limites de mon langage sont les limites de mon monde.» Le langage structure notre pensée et notre vision du monde. Certains problèmes philosophiques sont en réalité des confusions de langage.',citation:'«Sur ce dont on ne peut parler, il faut garder le silence.»',exemple:'Avoir un vocabulaire riche permet de penser de manière plus nuancée.'},
+  ],retenir:'Logos humain ≠ communication animale. Aristote (logos = politique) → Descartes (langage = pensée) → Bergson (langage trahit la réalité) → Wittgenstein (limites du langage = limites du monde).'},
+  {id:'liberte',title:'La Liberté',etym:'Du latin libertas = condition de l\'homme libre (≠ esclave).',short:'Libre arbitre, déterminisme, autonomie',def:'Liberté naturelle = absence d\'obstacles. Liberté morale = autonomie (se donner sa propre loi). Licence = faire tout ce qu\'on désire (≠ vraie liberté selon les philosophes).',philosophes:[
+    {name:'Descartes',period:'XVIIe s.',work:'Méditations Métaphysiques',these:'Le libre arbitre est la preuve de notre ressemblance avec Dieu. L\'âme peut s\'opposer aux passions du corps. La liberté est totale : on peut toujours suspendre son jugement.',citation:'«Le libre arbitre est la chose la plus grande qui soit en l\'homme.»',exemple:'Descartes peut décider de douter de tout : la volonté peut s\'opposer au corps.'},
+    {name:'Spinoza',period:'XVIIe s.',work:'L\'Éthique',these:'Le libre arbitre est une illusion. Nous sommes déterminés par des causes que nous ignorons. Nous nous croyons libres parce que nous connaissons nos désirs mais pas leurs causes. La vraie liberté = comprendre la nécessité.',citation:'«Les hommes se croient libres parce qu\'ils ont conscience de leurs désirs et ignorent les causes qui les déterminent.»',exemple:'Je «décide» spontanément de manger sucré — mais la vraie cause est une hypoglycémie.'},
+    {name:'Kant',period:'XVIIIe s.',work:'Critique de la raison pratique',these:'La liberté est le fondement de la moralité : sans liberté, pas de responsabilité, pas de devoir. La vraie liberté = autonomie (se donner sa propre loi morale, l\'impératif catégorique). Liberté ≠ licence.',citation:'«La liberté est l\'indépendance à l\'égard de tout mécanisme de la nature.»',exemple:'Agir par devoir = être vraiment libre. Agir par passion ou intérêt = être esclave de soi-même.'},
+    {name:'Sartre',period:'XXe s.',work:'L\'Existentialisme est un humanisme',these:'«L\'existence précède l\'essence.» Sans Dieu, l\'homme n\'a pas de nature prédéfinie. Il est «condamné à être libre» : responsable de tout ce qu\'il est. La liberté est totale et angoissante.',citation:'«L\'homme est condamné à être libre.»',exemple:'«Je ne pouvais pas faire autrement» est une mauvaise foi : il y avait toujours un choix.'},
+    {name:'Freud',period:'XXe s.',work:'Introduction à la psychanalyse',these:'Nos choix et désirs sont inconsciemment influencés par notre passé et nos pulsions. On ne choisit pas librement : des forces inconscientes orientent nos actes. Le libre arbitre est limité par l\'inconscient.',citation:'«L\'homme n\'est pas maître en sa propre maison.»',exemple:'Un symptôme névrotique (phobie) = expression inconsciente d\'un conflit que la conscience ignore.'},
+    {name:'Bourdieu',period:'XXe s.',work:'La Distinction',these:'Notre «goût» et nos choix sont déterminés par notre position sociale (habitus). Ce qu\'on croit librement choisir (musique, vêtements) est en fait conditionné par notre classe sociale.',citation:'«Le goût classifie, et classe celui qui classifie.»',exemple:'Les goûts musicaux varient systématiquement selon le milieu social.'},
+  ],retenir:'Libre arbitre (Descartes, Kant) ↔ Déterminisme (Spinoza, Freud, Bourdieu). Sartre : liberté totale et angoissante. La vraie liberté = peut-être l\'autonomie (Kant) ou la prise de conscience des déterminismes.'},
+  {id:'nature',title:'La Nature',etym:'Du latin natura = ce qui naît, ce qui est par naissance.',short:'État de nature, nature humaine, écologie',def:'La nature = tout ce qui existe spontanément, indépendamment de l\'homme. ≠ culture (ce que l\'homme transforme). Deux sens de «nature humaine» : 1) ce qui est commun à tous les humains, 2) l\'essence de l\'homme.',philosophes:[
+    {name:'Descartes',period:'XVIIe s.',work:'Discours de la méthode',these:'La nature = matière sans valeur propre, régie par des lois mécaniques. L\'homme peut et doit la comprendre et la transformer. «Se faire comme maître et possesseur de la nature» = objectif hygiéniste (réduire les souffrances).',citation:'«Nous rendre comme maîtres et possesseurs de la nature.»',exemple:'La médecine, l\'agriculture, l\'industrie : applications de la maîtrise technique de la nature.'},
+    {name:'Rousseau',period:'XVIIIe s.',work:'Discours sur l\'inégalité',these:'La nature est bonne. C\'est la société et la culture qui corrompent l\'homme. Retour à la nature = retrouver la bonté originelle. La pitié naturelle est le seul sentiment moral à l\'état de nature.',citation:'«Tout est bien sortant des mains de l\'Auteur des choses, tout dégénère entre les mains de l\'homme.»',exemple:'L\'homme sauvage = sain, indépendant, pacifique. L\'homme civilisé = envieux, dépendant, violent.'},
+    {name:'Jonas',period:'XXe s.',work:'Le Principe Responsabilité (1979)',these:'La nature possède une valeur intrinsèque. L\'homme a le devoir moral de la préserver. «Agis de telle sorte que les effets de ton action soient compatibles avec la permanence d\'une vie authentiquement humaine sur Terre.» Éthique pour les générations futures.',citation:'«Agis de façon à ne pas détruire les conditions futures de la vie humaine.»',exemple:'Réchauffement climatique : notre devoir envers les générations futures.'},
+  ],retenir:'Descartes (maîtriser) ↔ Rousseau (bonne et corrompue par la société) ↔ Jonas (protéger). Nature ≠ culture. Deux conceptions : nature sans valeur (Descartes) vs nature avec valeur (Jonas).'},
+  {id:'raison',title:'La Raison',etym:'Du latin ratio = calculer, mesurer, raisonner.',short:'Logos, bon sens, limites de la raison',def:'La raison est la faculté humaine permettant de distinguer le vrai du faux, le bien du mal. Elle organise nos relations avec le réel. Selon Aristote, c\'est ce qui distingue fondamentalement l\'homme de l\'animal.',philosophes:[
+    {name:'Descartes',period:'XVIIe s.',work:'Discours de la méthode',these:'«Le bon sens est la chose du monde la mieux partagée» : tout le monde a de la raison, mais tout le monde ne sait pas bien s\'en servir. La méthode = appliquer correctement la raison (doute, analyse, synthèse, dénombrement).',citation:'«Le bon sens est la chose du monde la mieux partagée.»',exemple:'Avoir la raison ne suffit pas : il faut appliquer la méthode. Comme un bon outil mal utilisé ne sert à rien.'},
+    {name:'Kant',period:'XVIIIe s.',work:'Critique de la raison pure',these:'La raison a des limites : elle ne peut connaître que les phénomènes (ce qui apparaît), pas les noumènes (les choses en soi). Les 3 questions inévitables mais insolubles : Dieu, âme, liberté. La raison se perd en contradictions quand elle sort de son domaine.',citation:'«Ose savoir ! Aie le courage de te servir de ton propre entendement.»',exemple:'La raison peut prouver l\'existence de Dieu ET l\'inexistence de Dieu (antinomies) → elle dépasse ses limites.'},
+    {name:'Edgar Morin',period:'XXe s.',work:'La Méthode',these:'L\'homme est un «homo sapiens demens» : à la fois rationnel et irrationnel. La raison seule ne définit pas l\'humanité. L\'homme peut être à la fois intelligent et fou, rationnel et passionné.',citation:'«L\'homme est à la fois sapiens (sage) et demens (fou).»',exemple:'Un scientifique brillant peut croire en des superstitions. L\'horreur des guerres mondiales organisées rationnellement.'},
+  ],retenir:'Raison = faculté de distinguer vrai/faux, bien/mal. Descartes (bon sens partagé) → Kant (limites : Dieu/âme/liberté inconnaissables) → Morin (homo sapiens demens). La raison n\'exclut pas la folie.'},
+  {id:'religion',title:'La Religion',etym:'Du latin religare = lier, ou religio = scrupule à remplir ses devoirs.',short:'Foi et raison, critiques, fonctions sociales',def:'La religion est un système de croyances et de pratiques qui relie des hommes entre eux et avec une instance non sensible, et donne sens à l\'existence. Distinction : religion (ensemble systémique) vs phénomènes religieux (Mauss).',philosophes:[
+    {name:'Bergson',period:'XIXe-XXe s.',work:'Les Deux sources de la morale et de la religion',these:'La religion est universelle : aucune société sans religion. Elle répond à un besoin vital de sens et sécurité. Religion statique (tradition, rite) vs dynamique (mystique créatrice). L\'homme est le seul être à «suspendre son existence à des choses déraisonnables».',citation:'«Il n\'y a jamais eu de société sans religion.»',exemple:'Même les sociétés primitives sans science ni art ont une religion.'},
+    {name:'Freud',period:'XXe s.',work:'L\'Avenir d\'une illusion (1927)',these:'La religion est une illusion psychologique née du sentiment de détresse. L\'enfant dépendant de son père projette ce besoin sur des dieux. La religion a eu une fonction éducative mais l\'humanité doit apprendre à s\'en passer.',citation:'«L\'homme se crée des dieux dont il a peur, mais auxquels il demande protection.»',exemple:'Prière = appel à un père protecteur. Religion = prolongement de la dépendance infantile.'},
+    {name:'Marx',period:'XIXe s.',work:'Contribution à la critique de la philosophie du droit de Hegel',these:'La religion est produite par l\'oppression sociale. Elle console sans supprimer la cause de la souffrance. Elle endort les consciences et fait accepter l\'injustice. C\'est une «protestation illusoire contre la misère réelle».',citation:'«La religion est le soupir de la créature opprimée… l\'opium du peuple.»',exemple:'Le paradis comme consolation de la misère terrestre. La religion légitime l\'ordre établi.'},
+    {name:'Nietzsche',period:'XIXe s.',work:'Le Gai Savoir (1882)',these:'«Dieu est mort» : effondrement des valeurs chrétiennes dans la culture moderne. Risque de nihilisme (plus rien n\'a de sens). Mais aussi libération : l\'homme peut créer ses propres valeurs. La religion est une «morale de faiblesse».',citation:'«Dieu est mort : à nous d\'inventer de nouvelles valeurs.»',exemple:'Les guerres mondiales : peut-on encore croire en la Providence après Auschwitz ?'},
+    {name:'Girard',period:'XXe s.',work:'La Violence et le Sacré (1972)',these:'Désir mimétique → jalousie et rivalités → violence → victime émissaire (bouc émissaire sacrifié). Le sacrifice rétablit la paix sociale. La religion naît de ce mécanisme sacrificiel. Les mythes masquent la violence originelle.',citation:'«Le religieux travaille doublement à décourager la violence.»',exemple:'Mythe du bouc émissaire : une communauté désigne un individu comme cause de tous ses maux et le sacrifie.'},
+    {name:'Pascal',period:'XVIIe s.',work:'Pensées',these:'Le Pari : on ne peut prouver l\'existence de Dieu. Parier sur son existence = stratégie rationnelle face à l\'incertitude. Si Dieu existe → on gagne l\'éternité. S\'il n\'existe pas → on n\'a rien perdu.',citation:'«Dieu est, ou il n\'est pas. [...] Il faut parier.»',exemple:'Le pari de Pascal n\'est pas une foi sincère mais un calcul rationnel — ce qui est paradoxal.'},
+  ],retenir:'Bergson (universelle) → Freud (illusion psychologique) → Marx (opium) → Nietzsche (mort de Dieu) → Girard (victime émissaire) → Pascal (pari). Toutes les théories s\'accordent sur l\'origine humaine de la religion.'},
+  {id:'science',title:'La Science',etym:'Du latin scientia = connaissance. Connaissance rationnelle et expérimentale.',short:'Méthode scientifique, pseudoscience, falsifiabilité',def:'La science est une connaissance rationnelle tenue par l\'expérience et une méthode rigoureuse. Elle se distingue de l\'opinion (non vérifiée). Ses critères : exactitude, régularité, objectivité.',philosophes:[
+    {name:'Cournot',period:'XIXe s.',work:'Traité de l\'enchaînement des idées fondamentales',these:'La science exige exactitude (reproductibilité), régularité (phénomènes récurrents) et objectivité (le chercheur est à distance de son objet). La psychologie ne remplit pas ces critères : états de conscience non reproductibles, subjectifs.',citation:'«La psychologie scientifique est une contradiction dans les termes.»',exemple:'Un géologue étudie une roche objectivement. Un psychologue étudie des états d\'âme qui varient d\'un individu à l\'autre.'},
+    {name:'Popper',period:'XXe s.',work:'La Logique de la découverte scientifique',these:'Critère de démarcation : une théorie est scientifique si elle est falsifiable (on peut imaginer une expérience qui la réfuterait). La psychanalyse et l\'astrologie ne sont pas falsifiables → ce ne sont pas des sciences.',citation:'«Une théorie qui explique tout n\'explique rien.»',exemple:'«Tous les cygnes sont blancs» est scientifique car on peut le réfuter (un cygne noir suffira). «L\'inconscient influence tout» n\'est pas réfutable.'},
+    {name:'Bachelard',period:'XXe s.',work:'La Formation de l\'esprit scientifique',these:'La science progresse contre les «obstacles épistémologiques» : les préjugés, l\'expérience première, les généralisations trop rapides. L\'esprit scientifique doit se reformer en permanence, briser ses habitudes de pensée.',citation:'«Rien ne va de soi. Rien n\'est donné. Tout est construit.»',exemple:'Il a fallu briser le sens commun pour accepter que la Terre tourne autour du Soleil.'},
+  ],retenir:'Science = exactitude + régularité + objectivité (Cournot). Falsifiabilité (Popper). Rupture avec le sens commun (Bachelard). Pseudosciences = allures de science sans méthode rigoureuse.'},
+  {id:'technique',title:'La Technique',etym:'Du grec technè = art, habileté, savoir-faire.',short:'Homo faber, outil, aliénation technique',def:'La technique désigne la maîtrise d\'une connaissance pratique, l\'ensemble des outils et machines produits par l\'homme, et l\'application des connaissances scientifiques. Art et technique n\'étaient pas distingués à l\'origine.',philosophes:[
+    {name:'Aristote',period:'IVe s. av. J.-C.',work:'Politique / De l\'Âme',these:'L\'aptitude à fabriquer des outils est un critère d\'humanité. L\'outil suppose qu\'on se représente mentalement l\'action à accomplir. La technique est indissociable de la pensée. L\'outil = prolongement du corps.',citation:'«L\'homme est le seul animal à avoir des mains.»',exemple:'Une pierre taillée en silex = preuve d\'une intention mentale. Un castor construit un barrage par instinct.'},
+    {name:'Descartes',period:'XVIIe s.',work:'Discours de la méthode',these:'La technique doit permettre de rendre l\'homme «maître et possesseur de la nature». Objectif médical et hygiéniste : réduire les maladies, prolonger la vie. La technique est au service de l\'humain.',citation:'«Se rendre comme maîtres et possesseurs de la nature.»',exemple:'La médecine moderne, les vaccins, la chirurgie comme accomplissement de ce projet cartésien.'},
+    {name:'Heidegger',period:'XXe s.',work:'La Question de la technique (1954)',these:'La technique moderne n\'est pas neutre : elle impose un mode de dévoilement du monde (tout = ressource exploitable). Elle menace de dominer l\'homme lui-même. Danger de l\'«arraisonnement» (Gestell) : la nature réduite à une réserve d\'énergie.',citation:'«Le danger, c\'est la technique elle-même dans son essence.»',exemple:'L\'agriculture industrielle : la terre n\'est plus un sol nourricier mais une «station de travaux».'},
+    {name:'Marx',period:'XIXe s.',work:'Le Capital',these:'La technique peut aliéner : le travail à la chaîne déshumanise. L\'ouvrier est réduit à un prolongement de la machine. La technique au service du capital amplifie l\'exploitation.',citation:'«La machine, qui est elle-même un outil, fait de l\'ouvrier son propre outil.»',exemple:'Charlie Chaplin, Les Temps modernes : l\'ouvrier absorbé dans la cadence infernale de la machine.'},
+  ],retenir:'Aristote (outil = humanité) → Descartes (maîtriser la nature) → Heidegger (danger de l\'essence technique) → Marx (aliénation par la machine). Technique ≠ science. Technique = médiation entre l\'homme et la nature.'},
+  {id:'temps',title:'Le Temps',etym:'Du latin tempus = durée, période.',short:'Temps objectif vs durée, 3 présents',def:'Double dimension du temps : temps objectif (mesurable, physique) et temps subjectif (vécu, qualitatif). L\'homme est le seul être pour qui le temps est une question (Heidegger).',philosophes:[
+    {name:'Héraclite',period:'VIe-Ve s. av. J.-C.',work:'Fragments',these:'Tout est en mouvement constant, rien ne reste identique. Le temps est le mouvement même du réel, régi par une harmonie cachée (le Logos). Les opposés (vie/mort, jour/nuit) se succèdent dans une unité vivante.',citation:'«On ne se baigne jamais deux fois dans le même fleuve.»',exemple:'L\'eau s\'écoule → le fleuve change. Nous vieillissons → nous changeons à chaque instant.'},
+    {name:'Saint Augustin',period:'IVe-Ve s.',work:'Les Confessions, Livre XI',these:'Le temps n\'est pas dans les choses mais dans la conscience. 3 présents : présent du passé (mémoire), présent du présent (attention), présent du futur (attente). Le présent est insaisissable car toujours en train de passer.',citation:'«Qu\'est-ce donc que le temps ? Si personne ne me le demande, je sais ; si on me le demande, je ne sais plus.»',exemple:'Le souvenir d\'hier (présent du passé), l\'attention à ce texte maintenant (présent du présent), l\'anticipation de demain (présent du futur).'},
+    {name:'Pascal',period:'XVIIe s.',work:'Pensées',these:'L\'homme fuit le présent dans le passé (regrets) ou l\'avenir (espoirs). Le divertissement = toutes les activités qui nous détournent de notre finitude. Seul le présent est vraiment vécu. «Nous ne vivons jamais, nous espérons de vivre.»',citation:'«Nous ne tenons jamais au temps présent.»',exemple:'Pendant les vacances on pense au retour. Au travail on pense aux prochaines vacances. On ne vit jamais «maintenant».'},
+    {name:'Bergson',period:'XIXe-XXe s.',work:'Essai sur les données immédiates de la conscience',these:'Temps scientifique (horloge, mesurable, quantitatif) ≠ durée (temps vécu, continu, qualitatif, personnel). La durée ne peut pas se diviser en instants identiques : elle est flux, transformation. Elle est «la vie même».',citation:'«La durée est la vie même, elle est indivisible et créatrice.»',exemple:'2h d\'ennui paraissent infinies. 2h absorbé dans une activité passent en un instant. Même durée, vécu totalement différent.'},
+    {name:'Heidegger',period:'XXe s.',work:'Être et Temps (1927)',these:'L\'homme est «jeté» dans une situation sans l\'avoir choisie (passé) et se «projette» vers l\'avenir (projets, choix). Le temps n\'est pas extérieur : il est la structure même de l\'existence. Passé/présent/futur sont indissociables.',citation:'«L\'être humain est un être-jeté dans le monde et projeté vers l\'avenir.»',exemple:'Ma nationalité, ma famille (jeté) → mes projets d\'études, de vie (projeté vers l\'avenir).'},
+    {name:'Ricœur',period:'XXe s.',work:'Temps et Récit (1983)',these:'Le temps prend sens dans le récit. En racontant, on organise passé/présent/futur et on donne une cohérence à la vie. «Le récit fait du temps vécu une histoire.» L\'identité personnelle est narrative.',citation:'«Le récit fait du temps vécu une histoire.»',exemple:'Raconter sa vie à un ami = donner du sens à des expériences en les ordonnant en un tout cohérent.'},
+  ],retenir:'Héraclite (devenir) → Augustin (3 présents dans la conscience) → Pascal (divertissement/fuite) → Bergson (durée vécue) → Heidegger (structure de l\'existence) → Ricœur (temps narratif).'},
+  {id:'travail',title:'Le Travail',etym:'Du latin tripalium = instrument de torture à 3 pieux. Connotation de souffrance.',short:'Marx, aliénation, Arendt, travail-oeuvre-action',def:'Le travail = activité par laquelle l\'homme transforme la nature pour satisfaire ses besoins. 3 sens : anthropologique (se réaliser), sociologique (gagner sa vie), existentiel (laisser une trace). ≠ jeu, loisir.',philosophes:[
+    {name:'Marx',period:'XIXe s.',work:'Le Capital / Manuscrits de 1844',these:'Ce qui distingue l\'homme de l\'animal : le travail humain est conscient, réfléchi et libre. L\'architecte > l\'abeille (représentation mentale). En travaillant, l\'homme s\'humanise. Mais le travail aliéné (à la chaîne) déshumanise.',citation:'«Ce qui distingue le plus mauvais architecte de l\'abeille la plus experte, c\'est qu\'il a construit la cellule dans sa tête avant de la construire dans la ruche.»',exemple:'Artisan qui crée une chaise = se reconnaît dans son œuvre (non aliéné). Ouvrier sur la chaîne Ford = n\'a aucune relation avec le produit final (aliéné).'},
+    {name:'Hegel',period:'XIXe s.',work:'Phénoménologie de l\'Esprit',these:'Dialectique du maître et de l\'esclave : en travaillant, l\'esclave développe des compétences que le maître (qui consomme sans travailler) n\'acquiert pas. À terme, l\'esclave devient plus libre que le maître. Le travail transforme l\'esclave.',citation:'«C\'est en travaillant que l\'esclave se libère.»',exemple:'L\'esclave qui fabrique des outils développe une intelligence pratique ; le maître s\'ankylose dans la consommation.'},
+    {name:'Arendt',period:'XXe s.',work:'Condition de l\'homme moderne',these:'3 activités distinctes : Travail (animal laborans, cyclique, vital, répétitif) / Œuvre (homo faber, crée des objets durables) / Action (vie politique, singularisation). La modernité a glorifié le travail au détriment des deux autres.',citation:'«L\'époque moderne s\'est ouverte par une exaltation du travail.»',exemple:'Un boulanger (travail) / un sculpteur (œuvre) / un militant politique (action) = trois rapports différents au monde.'},
+    {name:'Bertrand Russell',period:'XXe s.',work:'Éloge de l\'oisiveté (1932)',these:'L\'homme doit réduire son temps de travail pour avoir le loisir de se cultiver, de penser, d\'être heureux. L\'éloge de la paresse est une nécessité morale dans une société qui glorifie le travail excessif.',citation:'«La grande masse des hommes dans les pays industrialisés souffre d\'un excès de travail.»',exemple:'Les 35 heures en France comme tentative de donner plus de temps libre aux travailleurs.'},
+  ],retenir:'Travail = tripalium (torture) mais aussi humanisation (Marx). Dialectique maître-esclave (Hegel). Travail/œuvre/action (Arendt). Aliénation = travail à la chaîne qui déshumanise. Russell : éloge de l\'oisiveté.'},
+  {id:'verite',title:'La Vérité',etym:'Du latin veritas = ce qui est vrai, réel. Adéquation entre jugement et réalité.',short:'Erreur, illusion, critères de vérité',def:'La vérité = adéquation entre un jugement et la réalité. Critères : objectivité, universalité, unicité. Différents types de vérité : correspondance (scientifique), cohérence (logique), pragmatique (ce qui est utile).',philosophes:[
+    {name:'Platon',period:'IVe s. av. J.-C.',work:'Allégorie de la Caverne (République)',these:'La vérité est une, absolue, accessible uniquement par la raison et la philosophie. Les sens nous trompent (cave). Le philosophe sort de la caverne et contemple le soleil (les Idées). L\'opinion (doxa) ≠ connaissance vraie (épistémè).',citation:'«Le soleil, dans le monde visible, est l\'image du Bien dans le monde intelligible.»',exemple:'Les prisonniers de la caverne voient des ombres et les croient réelles → métaphore de l\'ignorance.'},
+    {name:'Alain',period:'XIXe-XXe s.',work:'Propos',these:'La vérité n\'est pas donnée directement. L\'erreur est une étape nécessaire : elle témoigne d\'un effort de pensée. La bêtise = ne pas reconnaître ses erreurs. «Toutes nos vérités sont des erreurs redressées.»',citation:'«Quiconque pense commence toujours par se tromper.»',exemple:'La science progresse par erreurs successives : Ptolémée → Copernic → Einstein. Chaque vérité corrige la précédente.'},
+    {name:'Pascal',period:'XVIIe s.',work:'Pensées',these:'3 ordres d\'accès à la vérité : 1) Ordre de la chair (sens, instinct). 2) Ordre de l\'esprit (raison, démonstration). 3) Ordre du cœur (intuition, foi). Les premiers principes sont connus par le cœur, non démontrables.',citation:'«Le cœur a ses raisons que la raison ne connaît point.»',exemple:'Je ne peux pas démontrer que 1+1=2 : c\'est une intuition primitive du cœur.'},
+    {name:'Nietzsche',period:'XIXe s.',work:'Le Gai Savoir / Par-delà le bien et le mal',these:'La vérité est une valeur créée par les hommes, non une réalité objective. «Les vérités sont des illusions dont on a oublié qu\'elles le sont.» Il n\'y a pas de vérité désintéressée : elle naît des désirs humains. La «volonté de vérité» est une forme de la volonté de puissance.',citation:'«Les vérités sont des illusions dont on a oublié qu\'elles le sont, des métaphores usées.»',exemple:'«La terre est plate» était une vérité absolue → devenue illusion. Toute «vérité» est relative à une époque.'},
+    {name:'Bergson',period:'XIXe-XXe s.',work:'L\'Évolution créatrice',these:'Le langage trahit la réalité vivante et singulière. Les mots figent ce qui est mouvant. L\'art peut atteindre une forme de vérité (subjective, intérieure) que la science et le langage ne peuvent saisir.',citation:'«L\'artiste voit mieux que les autres, car il regarde la réalité nue et sans voile.»',exemple:'Le mot «tristesse» ne saisit pas MA tristesse de cet instant précis.'},
+    {name:'Socrate',period:'Ve s. av. J.-C.',work:'Dialogues de Platon',these:'«Je sais que je ne sais rien.» La conscience de son ignorance est la condition du savoir. Il faut examiner continuellement ses opinions (maïeutique = accoucher les esprits). L\'opinion non examinée fait obstacle à la vérité.',citation:'«La vie sans examen ne vaut pas la peine d\'être vécue.»',exemple:'La maïeutique : Socrate pose des questions pour amener son interlocuteur à prendre conscience de ses contradictions.'},
+  ],retenir:'Platon (vérité absolue, Idées) → Alain (erreur nécessaire) → Pascal (3 ordres) → Nietzsche (illusion humaine) → Bergson (art > langage pour la vérité subjective) → Socrate (connais-toi toi-même).'},
+];
+
+function initNotions() {
+  const grid = document.getElementById('notions-grid');
+  const detail = document.getElementById('notion-detail-container');
+  grid.innerHTML = '';
+  detail.innerHTML = '';
+  document.getElementById('notions-list').style.display = '';
+  NOTIONS.forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'notion-card';
+    card.innerHTML = `<div class="notion-card-tag">${n.etym.split('.')[0]}</div><h3>${n.title}</h3><p>${n.short}</p><div class="arrow">Voir le cours complet →</div>`;
+    card.onclick = () => showNotion(n);
+    grid.appendChild(card);
+  });
+}
+
+function showNotion(n) {
+  document.getElementById('notions-list').style.display = 'none';
+  const container = document.getElementById('notion-detail-container');
+  let html = `
+    <button class="back-btn" onclick="backToNotions()">← Retour aux notions</button>
+    <div class="section-title">${n.title}</div>
+    <div class="def-box">
+      <p><strong>Définition :</strong> ${n.def}</p>
+      <div class="def-etym">Étymologie : ${n.etym}</div>
+    </div>
+    <div class="notion-section-title">Ce que disent les philosophes</div>
+  `;
+  n.philosophes.forEach(p => {
+    html += `<div class="philo-fiche">
+      <div class="philo-fiche-header">
+        <span class="philo-fiche-name">${p.name}</span>
+        <span class="philo-fiche-period">${p.period}</span>
+        <span class="philo-fiche-work">${p.work}</span>
+      </div>
+      <p>${p.these}</p>
+      <div class="citation">${p.citation}</div>
+      <div class="exemple"><strong>Exemple concret :</strong> ${p.exemple}</div>
+    </div>`;
+  });
+  html += `<div class="retenir-box"><strong>💡 À retenir</strong><p>${n.retenir}</p></div>`;
+  container.innerHTML = html;
+  container.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function backToNotions() {
+  document.getElementById('notions-list').style.display = '';
+  document.getElementById('notion-detail-container').innerHTML = '';
+  document.getElementById('notions-list').scrollIntoView({behavior:'smooth'});
+}
+
+// Init
+fcInit();
+initQuiz();
+setTimeout(initNotions, 100);
+</script>
+</body>
+</html>
